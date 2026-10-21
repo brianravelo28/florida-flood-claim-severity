@@ -42,7 +42,7 @@ Storm tracks are interpolated to hourly positions and each claim takes the close
 
 ## Run it
 
-Requires Python 3.9 or newer (the hosted dashboard runs on 3.11).
+Requires Python 3.13 or newer (tested on 3.13 and 3.14; the hosted dashboard runs on 3.14).
 
 ```bash
 pip install -r requirements.txt
