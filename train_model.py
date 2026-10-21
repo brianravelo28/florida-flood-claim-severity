@@ -58,7 +58,7 @@ def main():
         base[te] = y.iloc[tr].mean()
         fold[te] = k
         fold_r2.append(round(float(r2_score(y.iloc[te], oof[te])), 3))
-        print(f"fold {k}: years {sorted(year.iloc[te].unique())[:4]}... n={len(te):,} R2={fold_r2[-1]}", flush=True)
+        print(f"fold {k}: years {[int(v) for v in sorted(year.iloc[te].unique())[:4]]}... n={len(te):,} R2={fold_r2[-1]}", flush=True)
 
     metrics = {
         "headline_year_grouped_cv": scores(y, oof),

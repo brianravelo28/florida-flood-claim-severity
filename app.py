@@ -123,7 +123,7 @@ def _subset(years, counties, occs, floods, storms):
     for col, sel in (("countyName", counties), ("occupancy_group", occs), ("flood_zone_group", floods),
                      ("storm_category", storms)):
         if sel:
-            m &= claims[col].isin(sel).to_numpy()
+            m = m & claims[col].isin(sel).to_numpy()
     return claims[m]
 
 
@@ -618,14 +618,14 @@ def update_tab1(years, counties, occs, floods, storms, measure):
     size, med, counts = size[keep], med[keep], counts[keep]
     ci = pd.DataFrame(COUNTY_INFO).T.loc[size.index]
     scale = 46 / np.sqrt(max(size.max(), 1))
-    m = go.Figure(go.Scattermapbox(
+    m = go.Figure(go.Scattermap(
         lat=ci["lat"], lon=ci["lon"], mode="markers", text=size.index,
         marker=dict(size=np.maximum(np.sqrt(size.values) * scale, 5), color=med.values, colorscale="YlOrRd", showscale=True,
                     colorbar=dict(title="Median<br>claim", tickprefix="$"), opacity=0.75),
         customdata=np.c_[size.values, med.values, counts.values],
         hovertemplate="%{text}<br>" + MEASURES[measure] + ": %{customdata[0]:,.0f}<br>Median claim: %{customdata[1]:$,.0f}"
                       "<br>Claims: %{customdata[2]:,.0f}<extra></extra>"))
-    m.update_layout(mapbox=dict(style="open-street-map", center=dict(lat=27.9, lon=-83.2), zoom=5.4), height=520,
+    m.update_layout(map=dict(style="open-street-map", center=dict(lat=27.9, lon=-83.2), zoom=5.4), height=520,
                     margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor=SURFACE)
     return kpis, fig, m
 

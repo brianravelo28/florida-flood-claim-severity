@@ -151,7 +151,7 @@ The Claim Estimator tab uses a second LightGBM model with the loss year added to
 
 ## Reproducibility
 
-Run order (details in the README): `fetch_data.py`, `build_dataset.py`, `train_model.py`, `train_year_model.py`, the three `ablation_*.py` scripts, then `build_deploy_data.py`. Training is seeded, and the results above are what that sequence produced from the 2026-10-20 pull.
+Run order (details in the README): `fetch_data.py`, `build_dataset.py`, `train_model.py`, `train_year_model.py`, the three `ablation_*.py` scripts, then `build_deploy_data.py`. Training is seeded, and the results above are what that sequence produced from the 2026-10-20 pull. Rerunning it on Python 3.14 with pandas 3.0.6, NumPy 2.5.4, scikit-learn 1.9.1 and LightGBM 4.7.0 gave the same cleaned dataset, the same predictions and metrics to within 1e-13, as it had on the previous pinned versions (pandas 2.0.3, NumPy 1.24.3, scikit-learn 1.3.0, LightGBM 4.6.0).
 
 **Data version.** The raw pull is not in the repository (about 14 MB). A new pull returns FEMA's current data, which may differ from the pull used here. The SHA-256 of the cached v3 pull, `data/raw/fema_nfip_claims_v3_fl.csv.gz`, is `7201a19294bfb37dd5abdb9085ef27acede67a43a6b0accab43851e95809f6fa`.
 
