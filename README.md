@@ -36,7 +36,7 @@ Payout is building plus contents plus increased-cost-of-compliance payments. Abo
 
 ## How it works, and how far to trust it
 
-Storm tracks are interpolated to hourly positions and each claim takes the closest track point within 150 miles and 7 days. A LightGBM model (gradient-boosted decision trees) predicts the log of the 2025-dollar payout from 13 building, storm and location features. It is scored with cross-validation that keeps each loss year entirely in either training or testing, because claims from one storm are near-duplicates and a random split overstates skill (R² 0.41 instead of 0.20). Trained through 2019 and tested on 2020 onward, the model scores below zero (−0.23, against −0.62 for predicting the average), because payouts have grown faster than inflation.
+Storm tracks are interpolated to hourly positions and each claim takes the closest track point within 150 miles and 7 days. A LightGBM model (gradient-boosted decision trees) predicts the log of the 2025-dollar payout from 13 building, storm and location features. It is scored with cross-validation that keeps each loss year entirely in either training or testing, because claims from one storm are near-duplicates and a random split overstates skill (R² 0.41 instead of 0.20). Trained through 2019 and tested on 2020 onward, the model scores below zero (−0.24, against −0.62 for predicting the average), because payouts have grown faster than inflation.
 
 [docs/METHODOLOGY.md](docs/METHODOLOGY.md) covers every cleaning step with its counts, how the storm join was tuned and what that check does and does not show, the evaluation by fold and by year, the tests of building age and the loss year, how the Claim Estimator is calibrated, and the limitations.
 
