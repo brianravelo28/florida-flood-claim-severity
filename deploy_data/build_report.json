@@ -1,9 +1,9 @@
 {
-  "raw_rows": 448425,
-  "missing_latlon_pct": 0.577,
+  "raw_rows": 448618,
+  "missing_latlon_pct": 0.578,
   "rows_dropped": {
-    "missing lat/lon/date": 2586,
-    "amountPaid <= 0 (closed without payment)": 134334,
+    "missing lat/lon/date": 2591,
+    "amountPaid <= 0 (closed without payment)": 134415,
     "dateOfLoss before 1978": 0,
     "outside Florida bounds": 105
   },
@@ -25,13 +25,13 @@
     "missing lat/lon < 2%": true,
     "historical_storm_freq is non-negative": true
   },
-  "skew_raw": 17.473,
-  "skew_log": -0.362,
+  "skew_raw": 17.412,
+  "skew_log": -0.361,
   "flood_event_check": {
-    "claims_labelled_hurricane_or_TS_by_FEMA": 236238,
+    "claims_labelled_hurricane_or_TS_by_FEMA": 236318,
     "matched_to_any_storm_pct": 95.8,
     "matched_to_same_named_storm_pct": 95.6
   },
-  "final_rows": 311400,
+  "final_rows": 311507,
   "final_columns": 41
 }

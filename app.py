@@ -45,14 +45,14 @@ def _log(stage):
     print(f"[app] {stage} ({time.time() - _T0:.1f}s{rss})", file=sys.stderr, flush=True)
 
 
-# Design tokens (same light palette as the Rossmann dashboard)
+# Design tokens (light palette)
 SURFACE, PAGE_BG, BORDER, GRID = "#fcfcfb", "#f4f4f2", "#e5e4df", "#ecebe7"
 INK, INK_2, INK_3 = "#0b0b0b", "#52514e", "#6b6a66"
 BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
 SERIES = [BLUE, ORANGE, AQUA, "#eda100", "#e87ba4"]
 
 # ---------------------------------------------------------------- data ----
-# One compact row per paid claim (all 311,400; categoricals + float32, ~10 MB in memory). Every tab filters and
+# One compact row per paid claim (all paid claims; categoricals + float32, ~10 MB in memory). Every tab filters and
 # aggregates it live, so nothing is a precomputed summary of a subset.
 claims = pd.read_parquet(DEPLOY / "claims.parquet")
 claims["matched"] = claims["storm_label"].notna()
@@ -312,7 +312,7 @@ def header():
                 [
                     html.Summary("About this data and model"),
                     html.Ul([
-                        html.Li("Claims: FEMA OpenFEMA NFIP claims (v2), a frozen snapshot as of 2026-06-01. Storms: NOAA HURDAT2 Atlantic best-track, interpolated to hourly positions. Prices: CPI-U from FRED, so a 1992 claim and a 2024 claim are comparable."),
+                        html.Li("Claims: OpenFEMA NFIP Redacted Claims (v3), pulled 2026-10-20. Storms: NOAA HURDAT2 Atlantic best-track, interpolated to hourly positions. Prices: CPI-U from FRED, so a 1992 claim and a 2024 claim are comparable."),
                         html.Li("Only claims that were actually paid are included (payout = building + contents + increased-cost-of-compliance). About 30% of claims were closed without payment and are excluded, so this describes severity given a paid claim."),
                         html.Li("A claim is matched to the nearest storm track point within 150 miles and 7 days of the loss date. Checked against FEMA's own storm labels: 95.6% of claims FEMA calls a named hurricane or tropical storm matched the same-named storm."),
                         html.Li(f"The model is LightGBM on log payout. Its score comes from 5-fold cross-validation grouped by loss year, so each claim is predicted by a model that never saw that year: R² {h['r2_log']:.2f}. This is a modest signal, not a precise predictor; storm-to-storm variation is large."),
@@ -483,7 +483,7 @@ def ablation_block():
                  f"of age it scores {instead:.3f}, no better than having no age at all ({no_age:.3f}); added on top of age it doesn't help "
                  f"({add_on:.3f} vs {cur:.3f}); and once the loss year is in the model it adds essentially nothing ({with_both:.3f} vs "
                  f"{with_year:.3f}). It is another coarse era marker: roughly 5% of claims in the 1970s came from post-FIRM buildings, "
-                 "versus about 45% in the 2010s. Individual folds can move by several hundredths (up to about 0.08 across these tests) between models whose overall scores are nearly equal, so differences of "
+                 "versus about 45% in the 2010s. Individual folds can move by more than 0.1 (up to about 0.14 across these tests) between models whose overall scores are nearly equal, so differences of "
                  "a few thousandths are not meaningful.")
         children += [html.H3("Does FEMA's post-FIRM flag help?", style={"margin": "16px 0 8px"}), _ablation_table(f),
                      html.Div(note2, className="note")]
@@ -517,13 +517,13 @@ def tab4_layout():
         html.Div(f"R² by fold is {folds}: some storm seasons are far harder to predict than others. "
                  f"On years it has never seen, the model under-predicts: the actual median claim runs about {UNDERPREDICT:.1f}x its prediction "
                  "(payouts in a held-out storm year tend to be larger than in the years it learned from). The calibration chart below shows "
-                 "this, and the Claim Estimator corrects for it (by its own model's 1.53x). The table above always covers all claims; everything "
+                 f"this, and the Claim Estimator corrects for it (by its own model's {EST_UNDER:.2f}x). The table above always covers all claims; everything "
                  "below the next line responds to the filters.", className="note"),
         ablation_block(),
         html.Div(id="t4-dyn", style={"marginTop": "12px"}),
         html.Div([dcc.Graph(figure=f3, config={"displayModeBar": False}), chart_hint()], className="card", style={"marginTop": "12px"}),
-        html.Div("R² and error are on the log scale of the payout in 2025 dollars. 'Typical % error' is the median of |predicted - actual| / actual. "
-                 "Features do not include damage amounts or coverage limits, which are only known after the claim exists.", className="note"),
+        html.Div("R² and error are on the log scale of the payout in 2025 dollars. 'Typical % error' is the median of |predicted - actual| / actual: half of the predictions are within that percentage of the actual payout. "
+                 "Damage amounts are not features because they only exist once a claim does. Coverage limits are not features because the question is what storm, place and building characteristics explain (about 4% of building payments sit at the coverage limit).", className="note"),
     ])
 
 
@@ -538,7 +538,7 @@ def tab5_layout():
                  "range covers the middle 80% of its out-of-sample errors, so it is wide by design. Payouts have risen faster than inflation, so "
                  f"the year matters; the default is {YEAR_DEFAULT}, the latest year with a large sample, and it was dominated by Helene and Milton. "
                  "Years with few claims (2019, 2021, 2025-26) are noisy, and the model cannot extrapolate beyond the years in the data. "
-                 "Storm inputs are the wind speed at the storm's closest track point and its distance from the claim; location uses the "
+                 "These are patterns in past claims, not the effect of changing a storm or a building. Storm inputs are the wind speed at the storm's closest track point and its distance from the claim; location uses the "
                  "county's average claim coordinates.", className="note"),
     ])
 

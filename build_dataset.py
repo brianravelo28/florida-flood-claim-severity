@@ -14,14 +14,14 @@ OUT_CSV = ROOT / "data" / "insurance_clean.csv.gz"
 OUT_REPORT = ROOT / "data" / "build_report.json"
 
 EARTH_MI = 3959.0
-# Tuned against FEMA's own floodEvent storm labels: the spec's 50 mi / +/-30 d gave 67% correct
+# Tuned against FEMA's own floodEvent storm labels: 50 mi / +/-30 d gave 67% correct
 # storms and reached only ~half of named-storm claims; 150 mi / +/-7 d gives ~99.8% correct and ~96% reach.
 RADIUS_MI = 150.0
 WINDOW_H = 7 * 24
 FREQ_RADIUS_MI = 50.0
 FREQ_YEARS = 40
 TRACK_START_YEAR = 1978 - FREQ_YEARS
-# Florida incl. the panhandle (the spec's 30.5N / -87.5W box would cut off Pensacola and the northern border)
+# Florida incl. the panhandle (a 30.5N / -87.5W box would cut off Pensacola and the northern border)
 FL_LAT, FL_LON = (24.3, 31.1), (-87.7, -79.8)
 
 FL_COUNTIES = {
@@ -46,7 +46,7 @@ CATEGORY_LABELS = {-1: "No storm", 0: "Tropical Depression", 1: "Tropical Storm"
 
 CPI_BASE_YEAR = 2025
 
-# Verified against FEMA's official data dictionary (OpenFemaDataSetFields, FimaNfipClaims v2, occupancyType).
+# Verified against FEMA's official data dictionary (OpenFemaDataSetFields, NfipClaims, occupancyType).
 # FEMA notes that 2-digit codes are for Risk Rating 2.0 policies, yet they appear in claims from 1985 on.
 OCCUPANCY_LABELS = {
     0: "Unknown", 1: "Single-family residence", 2: "2-4 unit residential building",
@@ -227,13 +227,13 @@ def display_building_age(c, min_n=30):
     """Building age for DISPLAY/aggregation only (e.g. the Risk factors 'Building age' chart) -- NOT a model feature.
 
     Rows with no usable construction date (building_age_missing==1: 11,466 are FEMA's 1492 sentinel, all flagged
-    pre-FIRM, plus 247 other bad dates) get the median age of known-date pre-FIRM
+    pre-FIRM, plus 253 other bad dates) get the median age of known-date pre-FIRM
     claims from the SAME loss year, instead of the flat overall median: "pre-FIRM" is not a fixed age (it ages from
     ~9 years old in the 1970s to ~55 by the 2020s as the same construction era gets older), and 92% of these rows are
     themselves 1970s-80s losses. Tested in ablation_placeholder_age.py: this makes no difference to the model (R2
-    0.204 vs 0.203, within fold-to-fold noise), so the model keeps the flat-median building_age_years column; this
+    0.199 vs 0.198, within fold-to-fold noise), so the model keeps the flat-median building_age_years column; this
     display-only version just avoids lumping ~11,700 claims from every era into one misleading age bucket. (It also
-    applies the pre-FIRM age to the 247 non-sentinel rows, 0.08% of claims, some of which are really new buildings.)
+    applies the pre-FIRM age to the 253 non-sentinel rows, 0.08% of claims, some of which are really new buildings.)
     """
     known_prefirm = c[(c["building_age_missing"] == 0) & (c["post_firm"] == 0)]
     by_year = known_prefirm.groupby("yearOfLoss")["building_age_years"].agg(["median", "size"])
@@ -334,11 +334,11 @@ def validate(c):
         "missing lat/lon < 2%": report["missing_latlon_pct"] < 2,
         "historical_storm_freq is non-negative": bool((c["historical_storm_freq"] >= 0).all()),
     }
-    log(f"  historical_storm_freq range: {c['historical_storm_freq'].min()}-{c['historical_storm_freq'].max()} (spec guessed 0-20)")
+    log(f"  historical_storm_freq range: {c['historical_storm_freq'].min()}-{c['historical_storm_freq'].max()}")
     for k, v in checks.items():
         log(f"  [{'PASS' if v else 'FAIL'}] {k}")
     raw_skew, log_skew = c["amountPaid"].skew(), c["log_amountpaid"].skew()
-    log(f"  target skewness: raw {raw_skew:.2f} (spec > 1.5), log {log_skew:.2f} (spec < 0.5), "
+    log(f"  target skewness: raw {raw_skew:.2f}, log {log_skew:.2f}, "
         f"log of inflation-adjusted {c['log_amountpaid_real'].skew():.2f}")
     report["checks"] = checks
     report["skew_raw"], report["skew_log"] = round(float(raw_skew), 3), round(float(log_skew), 3)

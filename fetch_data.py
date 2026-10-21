@@ -1,7 +1,8 @@
 """Download and cache the real source data: OpenFEMA NFIP claims (Florida), NOAA HURDAT2 and FRED CPI-U.
 
-Everything lands in data/raw/ (gitignored); a re-run reuses the cache unless called with --refresh. Note that FEMA's v2
-claims endpoint is scheduled for removal on 2026-10-15, so after that --refresh will fail and the cache is the only copy.
+Everything lands in data/raw/ (gitignored); a re-run reuses the cache unless called with --refresh.
+Claims come from OpenFEMA's "NFIP Redacted Claims" v3 (the web service is named NfipClaims). FEMA retired version 2 of the
+dataset on 2026-10-15.
 """
 import re
 import sys
@@ -12,14 +13,14 @@ import pandas as pd
 import requests
 
 RAW_DIR = Path(__file__).parent / "data" / "raw"
-FEMA_CACHE = RAW_DIR / "fema_fl_claims.csv.gz"
+FEMA_CACHE = RAW_DIR / "fema_nfip_claims_v3_fl.csv.gz"
 HURDAT_CACHE = RAW_DIR / "hurdat2.txt"
 CPI_CACHE = RAW_DIR / "cpi_u.csv"
 CPI_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL"
 
-FEMA_URL = "https://www.fema.gov/api/open/v2/FimaNfipClaims"
+FEMA_URL = "https://www.fema.gov/api/open/v3/NfipClaims"
 NHC_DATA_PAGE = "https://www.nhc.noaa.gov/data/"
-HEADERS = {"User-Agent": "insurance-claim-predictor/1.0 (research project; brian.blitz28@gmail.com)"}
+HEADERS = {"User-Agent": "florida-flood-claim-severity/1.0 (research project; https://github.com/brianravelo28/insurance-claim-predictor)"}
 
 FEMA_FIELDS = [
     "id", "dateOfLoss", "yearOfLoss", "floodEvent", "latitude", "longitude", "countyCode",
@@ -62,7 +63,7 @@ def fetch_fema(refresh=False):
             "$skip": skip,
         }
         payload = _get(FEMA_URL, params).json()
-        rows = payload["FimaNfipClaims"]
+        rows = payload["NfipClaims"]
         if not rows:
             break
         frames.append(pd.DataFrame(rows))
