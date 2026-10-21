@@ -146,7 +146,8 @@ The Claim Estimator tab uses a second LightGBM model with the loss year added to
 - **Coverage limits are not used,** although they cap payouts (about 4% of building payments sit at the limit).
 - **No simple baseline beyond the average.** The model is compared with predicting the training average, not with a table of median payouts by county and year.
 - **Pre-FIRM dates.** The 1492 placeholder is treated as unknown; whether that building is old is an inference from the pre-FIRM flag.
-- **Tests.** The pipeline has data-validation checks (`data/build_report.json`), and the dashboard has been checked by hand; there is no automated test suite.
+- **Flood zone A99.** Four claims in zone A99 are coded with the AE/A1-A30 group, although the group label lists A99 with the zones that have no base elevation. It does not change any result; `tests/` records it as an expected failure.
+- **Tests.** `tests/` holds about 40 tests on small hand-built examples (cleaning, storm join, inflation, year-grouped folds, the committed bundle and every dashboard callback). They do not cover page layout or the live deployment, and they do not judge model quality.
 
 ## Reproducibility
 

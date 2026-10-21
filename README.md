@@ -62,6 +62,23 @@ python app.py                    # dashboard at http://localhost:8058
 
 The hosted dashboard runs on Render using `render.yaml` (a Render Blueprint) and `wsgi.py`; deployment notes are in the Methodology.
 
+## Tests
+
+The test suite (about 40 tests) checks that the pipeline does what the documentation says, using small hand-built examples, so they need no downloaded data and no network. They run in about 15 seconds, and on every push through GitHub Actions. Examples of what they check:
+
+- **Cleaning:** each exclusion removes the right rows and is counted; the three paid fields are summed; the 1492 placeholder and other unusable construction dates are flagged.
+- **Storm join:** a claim matches the nearest storm inside 150 miles and 7 days and not outside either limit; the storm-frequency feature counts only earlier years.
+- **Inflation:** the adjustment factor is 1 in the base year, and the missing October 2025 CPI month is interpolated.
+- **Evaluation:** in the year-grouped cross-validation, no loss year appears in both the training and test side of a fold.
+- **Committed bundle and dashboard:** `deploy_data/` is internally consistent (counts, metrics, the estimator model), and every dashboard callback returns without error, including when a filter matches no claims.
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest
+```
+
+They do not check page layout, the live Render deployment, or whether the model is any good; model quality is what the evaluation in the Methodology measures.
+
 ## Files
 
 | File | Purpose |
@@ -77,6 +94,8 @@ The hosted dashboard runs on Render using `render.yaml` (a Render Blueprint) and
 | `render.yaml`, `requirements-render.txt` | Render deployment and the hosted app's dependencies |
 | `requirements.txt` | Dependencies for the full pipeline and the app |
 | `deploy_data/` | What the hosted app loads |
+| `tests/`, `pytest.ini`, `requirements-dev.txt` | The test suite and its dependency |
+| `.github/workflows/tests.yml` | Runs the tests on every push |
 | `docs/METHODOLOGY.md` | Methods, evaluation, limitations and reproducibility |
 
 Released under the MIT License.
