@@ -54,6 +54,7 @@ python train_year_model.py       # the loss-year model behind the Claim Estimato
 python ablation_year_control.py  # optional, about 10 min: is building age a stand-in for the loss year?
 python ablation_postfirm.py      # optional, about 10 min: does FEMA's post-FIRM flag replace or add to age?
 python ablation_placeholder_age.py  # optional, a few min: alternative fill for unusable construction dates
+python ablation_redundant_inputs.py  # optional, about 5 min: do the distance band and storm category earn their place?
 python build_deploy_data.py      # compact bundle for the app -> deploy_data/
 python app.py                    # dashboard at http://localhost:8058
 ```
