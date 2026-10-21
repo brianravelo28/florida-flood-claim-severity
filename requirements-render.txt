@@ -1,5 +1,5 @@
 # Runtime dependencies for the hosted dashboard (no training stack). Versions match the local
-# environment the app was tested in, and the Rossmann dashboard's working Render deploy.
+# environment the app was tested in.
 pandas==2.0.3
 numpy==1.24.3
 pyarrow==21.0.0
