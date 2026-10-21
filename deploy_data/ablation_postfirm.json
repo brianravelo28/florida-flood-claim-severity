@@ -1,72 +1,72 @@
 {
   "Current model": {
-    "r2_log": 0.1987,
+    "r2_log": 0.1996,
     "median_abs_pct_error": 73.9,
     "fold_r2": [
-      0.301,
-      0.061,
-      0.154,
-      -0.034,
-      0.153
+      0.308,
+      0.067,
+      0.159,
+      -0.036,
+      0.141
     ],
-    "age_share_pct": 27.54,
+    "age_share_pct": 27.42,
     "post_firm_share_pct": 0.0,
     "year_share_pct": 0.0
   },
   "Add post-FIRM flag (age kept)": {
-    "r2_log": 0.1906,
-    "median_abs_pct_error": 74.1,
+    "r2_log": 0.1813,
+    "median_abs_pct_error": 74.3,
     "fold_r2": [
-      0.32,
-      -0.005,
-      0.152,
-      -0.03,
-      0.162
+      0.31,
+      -0.024,
+      0.137,
+      -0.028,
+      0.155
     ],
-    "age_share_pct": 25.42,
-    "post_firm_share_pct": 4.67,
+    "age_share_pct": 25.45,
+    "post_firm_share_pct": 4.7,
     "year_share_pct": 0.0
   },
   "Post-FIRM flag instead of building age": {
-    "r2_log": 0.1373,
+    "r2_log": 0.1368,
     "median_abs_pct_error": 75.9,
     "fold_r2": [
-      0.218,
-      -0.06,
+      0.219,
+      -0.045,
       0.071,
-      0.03,
-      0.052
+      0.019,
+      0.042
     ],
     "age_share_pct": 0.0,
-    "post_firm_share_pct": 17.28,
+    "post_firm_share_pct": 17.25,
     "year_share_pct": 0.0
   },
   "Loss year + post-FIRM flag (age kept)": {
-    "r2_log": 0.2034,
-    "median_abs_pct_error": 72.0,
+    "r2_log": 0.2037,
+    "median_abs_pct_error": 72.1,
     "fold_r2": [
-      0.352,
-      0.089,
-      0.101,
-      -0.048,
-      0.169
+      0.353,
+      0.071,
+      0.122,
+      -0.055,
+      0.174
     ],
-    "age_share_pct": 20.83,
-    "post_firm_share_pct": 6.37,
-    "year_share_pct": 18.97
+    "age_share_pct": 20.97,
+    "post_firm_share_pct": 6.36,
+    "year_share_pct": 18.24
   },
   "Loss year + post-FIRM flag, no building age": {
-    "r2_log": 0.2263,
-    "median_abs_pct_error": 71.2,
+    "r2_log": 0.222,
+    "median_abs_pct_error": 71.3,
     "fold_r2": [
-      0.298,
-      0.215,
-      0.113,
-      -0.038,
-      0.187
+      0.295,
+      0.195,
+      0.124,
+      -0.043,
+      0.182
     ],
     "age_share_pct": 0.0,
-    "post_firm_share_pct": 16.8,
-    "year_share_pct": 29.96
+    "post_firm_share_pct": 16.73,
+    "year_share_pct": 29.78
   }
 }

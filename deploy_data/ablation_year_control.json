@@ -1,112 +1,112 @@
 {
   "Current model": {
-    "r2_log": 0.1987,
+    "r2_log": 0.1996,
     "median_abs_pct_error": 73.9,
     "fold_r2": [
-      0.301,
-      0.061,
-      0.154,
-      -0.034,
-      0.153
+      0.308,
+      0.067,
+      0.159,
+      -0.036,
+      0.141
     ],
     "importance_pct": {
-      "building_age_years": 27.54,
-      "storm_wind_speed_kt": 18.96,
-      "is_elevated": 11.01,
-      "latitude": 10.72,
-      "occupancy_group_encoded": 7.6,
-      "longitude": 5.13
+      "building_age_years": 27.42,
+      "storm_wind_speed_kt": 18.73,
+      "latitude": 11.11,
+      "is_elevated": 11.0,
+      "occupancy_group_encoded": 7.46,
+      "longitude": 4.97
     },
-    "age_share_pct": 27.54,
+    "age_share_pct": 27.42,
     "year_share_pct": 0.0,
     "construction_year_share_pct": 0.0
   },
   "Add loss year (year control)": {
-    "r2_log": 0.2078,
-    "median_abs_pct_error": 72.2,
+    "r2_log": 0.2066,
+    "median_abs_pct_error": 72.3,
     "fold_r2": [
-      0.361,
-      0.085,
+      0.357,
+      0.087,
       0.128,
-      -0.044,
-      0.156
+      -0.053,
+      0.159
     ],
     "importance_pct": {
-      "building_age_years": 25.32,
-      "yearOfLoss": 17.16,
-      "storm_wind_speed_kt": 12.5,
-      "is_elevated": 10.86,
+      "building_age_years": 25.24,
+      "yearOfLoss": 17.43,
+      "storm_wind_speed_kt": 12.49,
+      "is_elevated": 10.77,
       "latitude": 9.45,
-      "occupancy_group_encoded": 7.28
+      "occupancy_group_encoded": 7.37
     },
-    "age_share_pct": 25.32,
-    "year_share_pct": 17.16,
+    "age_share_pct": 25.24,
+    "year_share_pct": 17.43,
     "construction_year_share_pct": 0.0
   },
   "Remove building age": {
-    "r2_log": 0.1429,
-    "median_abs_pct_error": 76.8,
+    "r2_log": 0.1458,
+    "median_abs_pct_error": 76.6,
     "fold_r2": [
-      0.14,
-      0.057,
-      0.086,
-      -0.002,
-      0.043
+      0.146,
+      0.059,
+      0.088,
+      0.004,
+      0.044
     ],
     "importance_pct": {
-      "storm_wind_speed_kt": 27.58,
+      "storm_wind_speed_kt": 27.61,
       "is_elevated": 19.41,
-      "latitude": 12.18,
-      "occupancy_group_encoded": 7.78,
-      "historical_storm_freq": 7.78,
-      "longitude": 7.05
+      "latitude": 12.37,
+      "historical_storm_freq": 7.74,
+      "occupancy_group_encoded": 7.69,
+      "distance_from_track_mi": 6.92
     },
     "age_share_pct": 0.0,
     "year_share_pct": 0.0,
     "construction_year_share_pct": 0.0
   },
   "Loss year, no building age": {
-    "r2_log": 0.2126,
-    "median_abs_pct_error": 72.1,
+    "r2_log": 0.2098,
+    "median_abs_pct_error": 72.0,
     "fold_r2": [
-      0.236,
-      0.225,
-      0.119,
-      -0.058,
-      0.174
+      0.242,
+      0.217,
+      0.118,
+      -0.068,
+      0.171
     ],
     "importance_pct": {
-      "yearOfLoss": 32.55,
-      "is_elevated": 18.84,
-      "storm_wind_speed_kt": 15.58,
-      "latitude": 9.71,
-      "occupancy_group_encoded": 7.53,
-      "longitude": 4.98
+      "yearOfLoss": 32.5,
+      "is_elevated": 18.72,
+      "storm_wind_speed_kt": 15.17,
+      "latitude": 9.65,
+      "occupancy_group_encoded": 7.61,
+      "longitude": 5.03
     },
     "age_share_pct": 0.0,
-    "year_share_pct": 32.55,
+    "year_share_pct": 32.5,
     "construction_year_share_pct": 0.0
   },
   "Loss year + construction year instead of age": {
-    "r2_log": 0.2296,
-    "median_abs_pct_error": 71.4,
+    "r2_log": 0.2207,
+    "median_abs_pct_error": 71.5,
     "fold_r2": [
-      0.365,
-      0.132,
-      0.159,
-      -0.041,
-      0.185
+      0.372,
+      0.103,
+      0.147,
+      -0.058,
+      0.192
     ],
     "importance_pct": {
-      "yearOfLoss": 30.18,
-      "yearOfConstruction": 17.32,
-      "storm_wind_speed_kt": 11.73,
-      "is_elevated": 9.66,
-      "latitude": 8.79,
-      "occupancy_group_encoded": 6.95
+      "yearOfLoss": 30.1,
+      "yearOfConstruction": 17.33,
+      "storm_wind_speed_kt": 11.47,
+      "is_elevated": 9.77,
+      "latitude": 8.66,
+      "occupancy_group_encoded": 7.0
     },
     "age_share_pct": 0.0,
-    "year_share_pct": 30.18,
-    "construction_year_share_pct": 17.32
+    "year_share_pct": 30.1,
+    "construction_year_share_pct": 17.33
   }
 }

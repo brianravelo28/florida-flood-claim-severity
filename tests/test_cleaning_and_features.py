@@ -98,16 +98,27 @@ def test_flood_zone_groups():
     assert enc.tolist() == [1, 1, 2, 2, 3, 3, 3, 4, 4, 0, 0]
 
 
-@pytest.mark.xfail(strict=True, reason="A99 matches the A1-A30 pattern, so it is coded as 'base elevation known' although "
-                                       "the group label lists it with the no-base-elevation zones (4 of 311,507 claims)")
 def test_a99_is_grouped_with_the_special_a_zones():
     enc, _ = bd.encode_flood_zone(pd.Series(["A99"]))
     assert enc.tolist() == [3]
 
 
-def test_wind_speed_maps_to_saffir_simpson_categories():
-    wind = [38.9, 39, 73.9, 74, 95.9, 96, 110.9, 111, 129.9, 130, 156.9, 157, np.nan]
-    assert bd.wind_to_category(wind).tolist() == [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, -1]
+def test_wind_speed_in_knots_maps_to_saffir_simpson_categories():
+    # HURDAT2 wind is in knots: tropical storm 34-63, Category 1 64-82, 2 83-95, 3 96-112, 4 113-136, 5 137+
+    wind = [33.9, 34, 63.9, 64, 82.9, 83, 95.9, 96, 112.9, 113, 136.9, 137, 160, np.nan]
+    assert bd.wind_to_category(wind).tolist() == [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, -1]
+
+
+@pytest.mark.parametrize("storm, peak_kt, category", [
+    ("Andrew 1992 (landfall 145 kt)", 145, "Category 5"),
+    ("Michael 2018 (landfall 140 kt)", 140, "Category 5"),
+    ("Ian 2022 (landfall 130 kt)", 130, "Category 4"),
+    ("Charley 2004 (landfall 130 kt)", 130, "Category 4"),
+    ("Irma 2017 (Marco Island landfall, 100 kt)", 100, "Category 3"),
+])
+def test_known_hurricanes_get_their_published_category(storm, peak_kt, category):
+    code = int(bd.wind_to_category([peak_kt])[0])
+    assert bd.CATEGORY_LABELS[code] == category, storm
 
 
 def cpi_fixture():

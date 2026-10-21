@@ -27,7 +27,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash import Dash, Input, Output, dash_table, dcc, html
 
-from constants import FACTOR_COLUMNS, FLOOD_ORDER, OCC_ORDER, STORM_ORDER
+from constants import FACTOR_COLUMNS, FLOOD_ORDER, OCC_ORDER, STORM_ORDER, WIND_BREAKS_KT
 
 BASE_DIR = Path(__file__).resolve().parent
 DEPLOY = BASE_DIR / "deploy_data"
@@ -91,7 +91,7 @@ AXIS_SHORT_LABELS = {
 }
 
 FACTOR_NOTES = {
-    "Storm category": "Strongest category of the nearest storm (HURDAT2 wind at the closest track point within 150 miles and 7 days). The order is not strictly increasing because a few catastrophic storms dominate individual categories; categories with no claims are omitted.",
+    "Storm category": "Saffir-Simpson category of the wind (HURDAT2, in knots) at the nearest storm track point within 150 miles and 7 days. The order is not strictly increasing because a few catastrophic storms dominate individual categories (Category 5 is almost all Andrew, Michael and Ian).",
     "Flood zone": "FEMA flood zone the property was rated in, grouped by FEMA's zone definitions.",
     "Occupancy type": "FEMA's legacy (1-4, 6) and newer (11-19) occupancy codes describe the same building types, so they are grouped together.",
     "Elevated building": "FEMA's elevatedBuildingIndicator.",
@@ -163,7 +163,7 @@ def pct(x):
 def wind_category(w):
     if w is None or np.isnan(w) or w <= 0:
         return -1
-    return int(np.select([w < 39, w < 74, w < 96, w < 111, w < 130, w < 157], [0, 1, 2, 3, 4, 5], default=6))
+    return int(np.select([w < b for b in WIND_BREAKS_KT], [0, 1, 2, 3, 4, 5], default=6))
 
 
 def distance_bin(dist):
@@ -372,7 +372,7 @@ def estimator_bar():
             html.Div(dcc.Checklist(id="t5-elev", options=[{"label": "Elevated?", "value": 1}], value=[]),
                     style={"paddingBottom": "18px"}),
             field("Storm Wind Speed (kt, 0 = no storm)", html.Div(dcc.Slider(id="t5-wind", min=0, max=150, step=5, value=90,
-                                                                            marks={0: "0", 39: "TS", 74: "Cat 1", 111: "Cat 3", 150: "150"}),
+                                                                            marks={0: "0", 34: "TS", 64: "Cat 1", 96: "Cat 3", 137: "Cat 5"}),
                                                                   style={"width": "300px", "paddingBottom": "18px"})),
             field("Distance From Storm Track (mi)", html.Div(dcc.Slider(id="t5-dist", min=0, max=150, step=5, value=40,
                                                                         marks={0: "0", 50: "50", 100: "100", 150: "150"}),
@@ -483,7 +483,7 @@ def ablation_block():
                  f"of age it scores {instead:.3f}, no better than having no age at all ({no_age:.3f}); added on top of age it doesn't help "
                  f"({add_on:.3f} vs {cur:.3f}); and once the loss year is in the model it adds essentially nothing ({with_both:.3f} vs "
                  f"{with_year:.3f}). It is another coarse era marker: roughly 5% of claims in the 1970s came from post-FIRM buildings, "
-                 "versus about 45% in the 2010s. Individual folds can move by more than 0.1 (up to about 0.14 across these tests) between models whose overall scores are nearly equal, so differences of "
+                 "versus about 45% in the 2010s. Individual folds can move by more than 0.1 (up to about 0.15 across these tests) between models whose overall scores are nearly equal, so differences of "
                  "a few thousandths are not meaningful.")
         children += [html.H3("Does FEMA's post-FIRM flag help?", style={"margin": "16px 0 8px"}), _ablation_table(f),
                      html.Div(note2, className="note")]

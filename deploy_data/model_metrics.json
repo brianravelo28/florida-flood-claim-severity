@@ -1,23 +1,23 @@
 {
   "headline_year_grouped_cv": {
-    "rmse_log": 1.489429875368371,
-    "mae_log": 1.193861368918463,
-    "r2_log": 0.19871875037934095,
-    "median_abs_pct_error": 73.93371114398393,
+    "rmse_log": 1.4885794240678156,
+    "mae_log": 1.1918138997772625,
+    "r2_log": 0.1996335381662082,
+    "median_abs_pct_error": 73.94441257730473,
     "n": 311507
   },
   "fold_r2": [
-    0.301,
-    0.061,
-    0.154,
-    -0.034,
-    0.153
+    0.308,
+    0.067,
+    0.159,
+    -0.036,
+    0.141
   ],
   "baseline_year_grouped_cv_predict_train_mean": {
     "rmse_log": 1.70452458696128,
-    "mae_log": 1.4097191378555258,
-    "r2_log": -0.049424982582206844,
-    "median_abs_pct_error": 84.60699235337886,
+    "mae_log": 1.409719137855526,
+    "r2_log": -0.049424982582207067,
+    "median_abs_pct_error": 84.60699235337881,
     "n": 311507
   },
   "features": [
@@ -52,10 +52,10 @@
     "train_years": "1978-2019",
     "test_years": "2020-2026",
     "model": {
-      "rmse_log": 1.6561505325023451,
-      "mae_log": 1.426266045751845,
-      "r2_log": -0.2331326194235197,
-      "median_abs_pct_error": 80.26087423297187,
+      "rmse_log": 1.6603671355454945,
+      "mae_log": 1.4297710277141016,
+      "r2_log": -0.23941978940255648,
+      "median_abs_pct_error": 80.34197180569232,
       "n": 124593
     },
     "baseline_predict_train_mean": {
@@ -67,272 +67,272 @@
     }
   },
   "random_split_for_contrast": {
-    "rmse_log": 1.2734140027376084,
-    "mae_log": 0.9594416541700822,
-    "r2_log": 0.41308423321189247,
-    "median_abs_pct_error": 62.8017796035712,
+    "rmse_log": 1.2738432966576534,
+    "mae_log": 0.9595232786681303,
+    "r2_log": 0.412688443877004,
+    "median_abs_pct_error": 62.73263191777614,
     "n": 62393
   },
   "by_year": {
     "1978": {
       "n": 255.0,
       "actual_mean_log": 8.737,
-      "predicted_mean_log": 8.756
+      "predicted_mean_log": 8.77
     },
     "1979": {
       "n": 3822.0,
       "actual_mean_log": 8.586,
-      "predicted_mean_log": 9.067
+      "predicted_mean_log": 9.056
     },
     "1980": {
       "n": 378.0,
       "actual_mean_log": 8.26,
-      "predicted_mean_log": 8.471
+      "predicted_mean_log": 8.545
     },
     "1981": {
       "n": 1260.0,
       "actual_mean_log": 7.753,
-      "predicted_mean_log": 8.278
+      "predicted_mean_log": 8.314
     },
     "1982": {
       "n": 3747.0,
       "actual_mean_log": 8.494,
-      "predicted_mean_log": 8.707
+      "predicted_mean_log": 8.745
     },
     "1983": {
       "n": 368.0,
       "actual_mean_log": 8.498,
-      "predicted_mean_log": 8.955
+      "predicted_mean_log": 8.954
     },
     "1984": {
       "n": 623.0,
       "actual_mean_log": 8.861,
-      "predicted_mean_log": 8.788
+      "predicted_mean_log": 8.768
     },
     "1985": {
       "n": 8486.0,
       "actual_mean_log": 9.525,
-      "predicted_mean_log": 9.612
+      "predicted_mean_log": 9.636
     },
     "1986": {
       "n": 369.0,
       "actual_mean_log": 8.788,
-      "predicted_mean_log": 9.291
+      "predicted_mean_log": 9.252
     },
     "1987": {
       "n": 314.0,
       "actual_mean_log": 8.409,
-      "predicted_mean_log": 9.191
+      "predicted_mean_log": 9.179
     },
     "1988": {
       "n": 1899.0,
       "actual_mean_log": 8.737,
-      "predicted_mean_log": 9.432
+      "predicted_mean_log": 9.423
     },
     "1989": {
       "n": 181.0,
       "actual_mean_log": 9.209,
-      "predicted_mean_log": 9.387
+      "predicted_mean_log": 9.362
     },
     "1990": {
       "n": 131.0,
       "actual_mean_log": 9.393,
-      "predicted_mean_log": 9.429
+      "predicted_mean_log": 9.398
     },
     "1991": {
       "n": 1345.0,
       "actual_mean_log": 8.782,
-      "predicted_mean_log": 9.418
+      "predicted_mean_log": 9.424
     },
     "1992": {
       "n": 4932.0,
       "actual_mean_log": 10.192,
-      "predicted_mean_log": 9.574
+      "predicted_mean_log": 9.668
     },
     "1993": {
       "n": 8787.0,
       "actual_mean_log": 10.217,
-      "predicted_mean_log": 9.004
+      "predicted_mean_log": 9.014
     },
     "1994": {
       "n": 2100.0,
       "actual_mean_log": 8.904,
-      "predicted_mean_log": 9.096
+      "predicted_mean_log": 9.1
     },
     "1995": {
       "n": 12210.0,
       "actual_mean_log": 9.939,
-      "predicted_mean_log": 9.842
+      "predicted_mean_log": 9.839
     },
     "1996": {
       "n": 6799.0,
       "actual_mean_log": 9.688,
-      "predicted_mean_log": 9.287
+      "predicted_mean_log": 9.253
     },
     "1997": {
       "n": 1480.0,
       "actual_mean_log": 8.723,
-      "predicted_mean_log": 9.415
+      "predicted_mean_log": 9.374
     },
     "1998": {
       "n": 7905.0,
       "actual_mean_log": 9.208,
-      "predicted_mean_log": 9.899
+      "predicted_mean_log": 9.806
     },
     "1999": {
       "n": 15635.0,
       "actual_mean_log": 8.792,
-      "predicted_mean_log": 9.427
+      "predicted_mean_log": 9.513
     },
     "2000": {
       "n": 10156.0,
       "actual_mean_log": 9.452,
-      "predicted_mean_log": 9.056
+      "predicted_mean_log": 9.055
     },
     "2001": {
       "n": 3330.0,
       "actual_mean_log": 9.288,
-      "predicted_mean_log": 9.528
+      "predicted_mean_log": 9.526
     },
     "2002": {
       "n": 758.0,
       "actual_mean_log": 8.952,
-      "predicted_mean_log": 9.467
+      "predicted_mean_log": 9.475
     },
     "2003": {
       "n": 1125.0,
       "actual_mean_log": 9.091,
-      "predicted_mean_log": 9.557
+      "predicted_mean_log": 9.556
     },
     "2004": {
       "n": 22225.0,
       "actual_mean_log": 10.274,
-      "predicted_mean_log": 9.949
+      "predicted_mean_log": 9.978
     },
     "2005": {
       "n": 20129.0,
       "actual_mean_log": 9.878,
-      "predicted_mean_log": 9.55
+      "predicted_mean_log": 9.592
     },
     "2006": {
       "n": 527.0,
       "actual_mean_log": 9.588,
-      "predicted_mean_log": 9.53
+      "predicted_mean_log": 9.561
     },
     "2007": {
       "n": 438.0,
       "actual_mean_log": 9.353,
-      "predicted_mean_log": 9.442
+      "predicted_mean_log": 9.477
     },
     "2008": {
       "n": 2834.0,
       "actual_mean_log": 9.47,
-      "predicted_mean_log": 9.289
+      "predicted_mean_log": 9.262
     },
     "2009": {
       "n": 2422.0,
       "actual_mean_log": 9.833,
-      "predicted_mean_log": 9.648
+      "predicted_mean_log": 9.631
     },
     "2010": {
       "n": 272.0,
       "actual_mean_log": 9.293,
-      "predicted_mean_log": 9.806
+      "predicted_mean_log": 9.82
     },
     "2011": {
       "n": 1206.0,
       "actual_mean_log": 9.564,
-      "predicted_mean_log": 9.803
+      "predicted_mean_log": 9.804
     },
     "2012": {
       "n": 3144.0,
       "actual_mean_log": 9.434,
-      "predicted_mean_log": 9.428
+      "predicted_mean_log": 9.46
     },
     "2013": {
       "n": 1251.0,
       "actual_mean_log": 9.722,
-      "predicted_mean_log": 9.898
+      "predicted_mean_log": 9.913
     },
     "2014": {
       "n": 2768.0,
       "actual_mean_log": 10.2,
-      "predicted_mean_log": 9.886
+      "predicted_mean_log": 9.882
     },
     "2015": {
       "n": 1180.0,
       "actual_mean_log": 9.558,
-      "predicted_mean_log": 9.726
+      "predicted_mean_log": 9.72
     },
     "2016": {
       "n": 6303.0,
       "actual_mean_log": 10.301,
-      "predicted_mean_log": 10.129
+      "predicted_mean_log": 10.11
     },
     "2017": {
       "n": 19886.0,
       "actual_mean_log": 10.176,
-      "predicted_mean_log": 9.88
+      "predicted_mean_log": 9.89
     },
     "2018": {
       "n": 3321.0,
       "actual_mean_log": 10.446,
-      "predicted_mean_log": 10.221
+      "predicted_mean_log": 10.117
     },
     "2019": {
       "n": 613.0,
       "actual_mean_log": 9.964,
-      "predicted_mean_log": 10.341
+      "predicted_mean_log": 10.337
     },
     "2020": {
       "n": 7441.0,
       "actual_mean_log": 10.019,
-      "predicted_mean_log": 9.925
+      "predicted_mean_log": 9.959
     },
     "2021": {
       "n": 449.0,
       "actual_mean_log": 9.896,
-      "predicted_mean_log": 10.033
+      "predicted_mean_log": 10.019
     },
     "2022": {
       "n": 39736.0,
       "actual_mean_log": 10.942,
-      "predicted_mean_log": 9.997
+      "predicted_mean_log": 9.994
     },
     "2023": {
       "n": 8545.0,
       "actual_mean_log": 10.777,
-      "predicted_mean_log": 10.502
+      "predicted_mean_log": 10.469
     },
     "2024": {
       "n": 68076.0,
       "actual_mean_log": 10.921,
-      "predicted_mean_log": 10.725
+      "predicted_mean_log": 10.74
     },
     "2025": {
       "n": 317.0,
       "actual_mean_log": 10.397,
-      "predicted_mean_log": 10.15
+      "predicted_mean_log": 10.185
     },
     "2026": {
       "n": 29.0,
       "actual_mean_log": 10.002,
-      "predicted_mean_log": 10.07
+      "predicted_mean_log": 10.081
     }
   },
   "shap_importance_pct": {
-    "building_age_years": 27.54,
-    "storm_wind_speed_kt": 18.96,
-    "is_elevated": 11.01,
-    "latitude": 10.72,
-    "occupancy_group_encoded": 7.6,
-    "longitude": 5.13,
-    "historical_storm_freq": 4.61,
-    "distance_from_track_mi": 4.6,
-    "storm_category_encoded": 4.2,
-    "flood_zone_encoded": 2.28,
-    "building_age_missing": 2.12,
-    "days_to_storm": 0.84,
-    "distance_bin": 0.4
+    "building_age_years": 27.42,
+    "storm_wind_speed_kt": 18.73,
+    "latitude": 11.11,
+    "is_elevated": 11.0,
+    "occupancy_group_encoded": 7.46,
+    "longitude": 4.97,
+    "historical_storm_freq": 4.79,
+    "distance_from_track_mi": 4.75,
+    "storm_category_encoded": 3.98,
+    "flood_zone_encoded": 2.22,
+    "building_age_missing": 2.17,
+    "days_to_storm": 0.88,
+    "distance_bin": 0.51
   }
 }
