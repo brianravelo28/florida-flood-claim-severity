@@ -60,7 +60,7 @@ python app.py                    # dashboard at http://localhost:8058
 
 `deploy_data/` is committed, so the dashboard runs without any of the steps above. A fresh pull from OpenFEMA returns FEMA's current data, which can differ slightly from the 2026-10-20 pull behind the published numbers (see Reproducibility in the Methodology).
 
-The hosted dashboard runs on Render using `render.yaml` (a Render Blueprint) and `wsgi.py`; deployment notes are in the Methodology.
+The hosted dashboard runs on Render with `wsgi.py` as its entry point. `render.yaml` records the service's settings (build command, start command, plan, Python version) for reference; the live service is controlled from Render's dashboard, so editing the file does not change the deployment. Deployment notes are in the Methodology.
 
 ## Tests
 
@@ -91,7 +91,7 @@ They do not check page layout, the live Render deployment, or whether the model 
 | `build_deploy_data.py` | Packages the claims table, models and metrics into `deploy_data/` |
 | `constants.py` | Category labels shared by the build script and the app |
 | `app.py`, `wsgi.py` | The Dash dashboard and its hosting entry point |
-| `render.yaml`, `requirements-render.txt` | Render deployment and the hosted app's dependencies |
+| `render.yaml`, `requirements-render.txt` | The hosted service's settings (for reference) and the hosted app's dependencies |
 | `requirements.txt` | Dependencies for the full pipeline and the app |
 | `deploy_data/` | What the hosted app loads |
 | `tests/`, `pytest.ini`, `requirements-dev.txt` | The test suite and its dependency |
