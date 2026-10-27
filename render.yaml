@@ -1,4 +1,5 @@
-# Render Blueprint: New + -> Blueprint -> pick this repo.
+# Reference configuration for the hosted service. Render's dashboard controls the live service and its settings (for example
+# PYTHON_VERSION) take precedence over this file, so keep the two in step by hand when either changes.
 services:
   - type: web
     name: florida-flood-claim-severity

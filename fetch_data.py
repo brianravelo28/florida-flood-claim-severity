@@ -20,7 +20,7 @@ CPI_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL"
 
 FEMA_URL = "https://www.fema.gov/api/open/v3/NfipClaims"
 NHC_DATA_PAGE = "https://www.nhc.noaa.gov/data/"
-HEADERS = {"User-Agent": "florida-flood-claim-severity/1.0 (research project; https://github.com/brianravelo28/insurance-claim-predictor)"}
+HEADERS = {"User-Agent": "florida-flood-claim-severity/1.0 (research project; https://github.com/brianravelo28/florida-flood-claim-severity)"}
 
 FEMA_FIELDS = [
     "id", "dateOfLoss", "yearOfLoss", "floodEvent", "latitude", "longitude", "countyCode",
