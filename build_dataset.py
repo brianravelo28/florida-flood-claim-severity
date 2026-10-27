@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
+from constants import WIND_BREAKS_KT
 from fetch_data import fetch_cpi, fetch_fema, fetch_hurdat2
 
 ROOT = Path(__file__).parent
@@ -218,9 +219,7 @@ def join_storms(claims, tracks):
 # ---------------------------------------------------------------- features
 def wind_to_category(w):
     w = np.asarray(w, dtype=float)
-    return np.select(
-        [np.isnan(w), w < 39, w < 74, w < 96, w < 111, w < 130, w < 157], [-1, 0, 1, 2, 3, 4, 5], default=6
-    ).astype(int)
+    return np.select([np.isnan(w)] + [w < b for b in WIND_BREAKS_KT], [-1, 0, 1, 2, 3, 4, 5], default=6).astype(int)
 
 
 def display_building_age(c, min_n=30):
@@ -231,7 +230,7 @@ def display_building_age(c, min_n=30):
     claims from the SAME loss year, instead of the flat overall median: "pre-FIRM" is not a fixed age (it ages from
     ~9 years old in the 1970s to ~55 by the 2020s as the same construction era gets older), and 92% of these rows are
     themselves 1970s-80s losses. Tested in ablation_placeholder_age.py: this makes no difference to the model (R2
-    0.199 vs 0.198, within fold-to-fold noise), so the model keeps the flat-median building_age_years column; this
+    0.200 vs 0.201, within fold-to-fold noise), so the model keeps the flat-median building_age_years column; this
     display-only version just avoids lumping ~11,700 claims from every era into one misleading age bucket. (It also
     applies the pre-FIRM age to the 253 non-sentinel rows, 0.08% of claims, some of which are really new buildings.)
     """
@@ -260,7 +259,7 @@ def encode_flood_zone(z):
     for mask, code, name in [
         (z.isin(["X", "B", "C"]), 1, "X / B / C (moderate-minimal)"),
         (z.str.startswith("A"), 3, "A / AH / AO / AR / A99 (no base elevation, shallow, special)"),
-        (z.str.match(r"^AE$|^A\d{1,2}$"), 2, "AE / A1-A30 (base elevation known)"),
+        (z.str.match(r"^AE$|^A(?!99$)\d{1,2}$"), 2, "AE / A1-A30 (base elevation known)"),
         (z.str.startswith("V"), 4, "V / VE (velocity, coastal)"),
     ]:
         enc[mask.to_numpy()] = code
