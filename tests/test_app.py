@@ -44,15 +44,17 @@ def test_filtering_by_county_and_years_narrows_the_claims():
 def test_overview_tab(measure):
     kpis, year_fig, note, decades, map_fig = dash_app.update_tab1(*no_filters(), measure)
     assert kpis and year_fig.data and map_fig.data
-    assert "partial year" in note
+    assert "partial year" in text_of(note)
     assert "1978-79" in text_of(decades) and "2020-26" in text_of(decades)
 
 
 def test_overview_year_chart_shows_claims_per_year_and_flags_small_years():
     _, year_fig, note, _, _ = dash_app.update_tab1(*no_filters(), "median")
     bar = year_fig.data[0]
-    assert len(bar.customdata) == len(bar.x) and int(bar.customdata[0][0]) > 0
-    assert "fewer than" in note, "the small early and late years should be flagged"
+    assert len(bar.customdata) == len(bar.x) and int(bar.customdata[0][0].replace(",", "").rstrip("*")) > 0
+    assert any(c[0].endswith("*") for c in bar.customdata), "small years carry an asterisk on their claim count"
+    assert not bar.customdata[list(bar.x).index(2024)][0].endswith("*")
+    assert "fewer than" in text_of(note), "the small early and late years should be explained"
     assert len(set(bar.marker.color)) == 2
 
 
@@ -99,7 +101,7 @@ def test_risk_factors_tab(factor):
 
 def test_building_age_shows_each_decade_separately_with_the_entanglement_note():
     fig, _, note, extra = dash_app.update_tab3(*no_filters(), "Building age")
-    assert "move together" in note and "not evidence that age drives payout" in note
+    assert "move together" in text_of(note) and "not evidence that age drives payout" in text_of(note)
     strat_fig = extra.children[0].figure
     assert len(strat_fig.data) >= 4, "one line per decade of loss"
     assert "Claims behind each line" in text_of(extra)
@@ -107,9 +109,10 @@ def test_building_age_shows_each_decade_separately_with_the_entanglement_note():
 
 def test_groups_under_the_minimum_are_flagged_not_charted():
     # In 1978-79 the "Unknown" occupancy group has 27 claims, fewer than the minimum
-    fig, table, _, _ = dash_app.update_tab3((1978, 1979), [], [], [], "Occupancy type")
-    assert "fewer than" in text_of(table) and "Unknown" in text_of(table)
+    fig, table, note, _ = dash_app.update_tab3((1978, 1979), [], [], [], "Occupancy type")
+    assert "27*" in text_of(table) and "Unknown" in text_of(table)
     assert not any("Unknown" in label for label in fig.data[0].x)
+    assert "marked *" in text_of(note) and "not drawn" in text_of(note)
 
 
 def test_a_filter_with_no_matches_does_not_crash_any_tab():

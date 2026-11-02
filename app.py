@@ -169,9 +169,7 @@ details.about ul {{ margin: 8px 0 0; padding-left: 20px; color: {INK_2}; line-he
 table.eval {{ border-collapse: collapse; width: 100%; font-size: 15px; display: block; overflow-x: auto; }}
 table.eval th, table.eval td {{ text-align: left; padding: 8px 10px; border-bottom: 1px solid {BORDER}; }}
 table.eval th {{ color: {INK_2}; font-weight: 600; }}
-table.eval td.dim {{ color: {INK_3}; }}
 .chart-hint {{ margin: 4px 2px 0; color: {INK_3}; font-size: 15px; font-style: italic; }}
-.table-note {{ margin: 6px 2px 0; color: {INK_3}; font-size: 15px; font-style: italic; }}
 """
 
 CHART_HINT = (
@@ -332,12 +330,13 @@ def tab1_layout():
                                           value="total", clearable=False, searchable=False, style={"width": "240px"})),
         ], className="controls card"),
         html.Div(id="t1-kpis", className="kpi-row", style={"margin": "12px 0"}),
-        html.Div([dcc.Graph(id="t1-year-chart", config={"displayModeBar": False}), chart_hint()], className="card"),
-        html.Div(id="t1-year-note", className="note"),
+        html.Div([dcc.Graph(id="t1-year-chart", config={"displayModeBar": False}), chart_hint(), html.Div(id="t1-year-note")],
+                 className="card"),
         html.Div(id="t1-decades", className="card", style={"marginTop": "12px"}),
-        html.Div([dcc.Graph(id="t1-map", config={"displayModeBar": False}), chart_hint(MAP_HINT)], className="card", style={"marginTop": "12px"}),
-        html.Div(f"Map bubbles are sized by the selected measure and colored by median claim. Counties with fewer than {MIN_CLAIMS} "
-                 "claims are not shown.", className="note"),
+        html.Div([dcc.Graph(id="t1-map", config={"displayModeBar": False}), chart_hint(MAP_HINT),
+                  about(["Bubbles are sized by the selected measure and colored by median claim.",
+                         f"Counties with fewer than {MIN_CLAIMS} claims are not shown."], "About this map")],
+                 className="card", style={"marginTop": "12px"}),
     ])
 
 
@@ -369,9 +368,9 @@ def tab3_layout():
                                                            value="Flood zone", clearable=False, searchable=False,
                                                            style={"width": "300px"}))],
                  className="controls card"),
-        html.Div([dcc.Graph(id="t3-chart", config={"displayModeBar": False}), chart_hint()], className="card", style={"marginTop": "12px"}),
+        html.Div([dcc.Graph(id="t3-chart", config={"displayModeBar": False}), chart_hint(), html.Div(id="t3-note")],
+                 className="card", style={"marginTop": "12px"}),
         html.Div(id="t3-table", className="card", style={"marginTop": "12px"}),
-        html.Div(id="t3-note", className="note"),
         html.Div(id="t3-extra", style={"marginTop": "12px"}),
     ])
 
@@ -404,13 +403,23 @@ NO_CLAIMS = "No claims match these filters"
 ERA_NOTE = "Labels are sparse before the mid-1980s and uneven from year to year, so this tab ranks events and does not compare eras."
 
 
-def table(headers, rows, dim_rows=()):
-    """A plain results table. A cell may be (text, tooltip); rows listed in dim_rows (small groups) are shown in a muted color."""
+def about(items, title="About this chart"):
+    """A collapsed 'About ...' section, styled like 'About this data', for the notes on a chart or table."""
+    items = [i for i in items if i]
+    return html.Details([html.Summary(title), html.Ul([html.Li(i) for i in items])], className="about") if items else None
+
+
+def count_cell(n):
+    """A claim count; one under MIN_CLAIMS gets an asterisk and a tooltip."""
+    n = int(n)
+    return f"{n:,}" if n >= MIN_CLAIMS or n == 0 else (f"{n:,}*", f"Fewer than {MIN_CLAIMS} claims")
+
+
+def table(headers, rows):
+    """A plain results table. A cell may be (text, tooltip)."""
     return html.Table([
         html.Thead(html.Tr([html.Th(h) for h in headers])),
-        html.Tbody([html.Tr([html.Td(v[0], title=v[1], className="dim" if i in dim_rows else None) if isinstance(v, tuple)
-                             else html.Td(v, className="dim" if i in dim_rows else None) for v in row])
-                    for i, row in enumerate(rows)]),
+        html.Tbody([html.Tr([html.Td(v[0], title=v[1]) if isinstance(v, tuple) else html.Td(v) for v in row]) for row in rows]),
     ], className="eval")
 
 
@@ -426,7 +435,7 @@ def update_filter_count(years, counties, occs, floods):
 def update_tab1(years, counties, occs, floods, measure):
     sub = filtered(years, counties, occs, floods)
     if sub.empty:
-        return [kpi("Claims", "0")], empty_fig(NO_CLAIMS), "", html.Div(NO_CLAIMS, className="note"), empty_fig(NO_CLAIMS, 520)
+        return [kpi("Claims", "0")], empty_fig(NO_CLAIMS), html.Div(), html.Div(NO_CLAIMS, className="note"), empty_fig(NO_CLAIMS, 520)
     labeled = 100 * sub["event"].notna().mean()
     kpis = [kpi("Claims", f"{len(sub):,}"), kpi("Total paid", money(sub["amountPaid_real"].sum()), "2025 dollars"),
             kpi("Median claim", money(sub["amountPaid_real"].median()), "2025 dollars"),
@@ -440,23 +449,22 @@ def update_tab1(years, counties, occs, floods, measure):
     tops = [top_event.get(int(i), "no event label") for i in y.index]
     small = n < MIN_CLAIMS
     fig = go.Figure(go.Bar(x=y.index, y=y.values, marker_color=[BLUE_LIGHT if s else BLUE for s in small],
-                           customdata=np.c_[n.values, tops],
-                           hovertemplate="%{x}: %{y:,.0f}<br>Claims: %{customdata[0]:,}<br>Most claims from: %{customdata[1]}<extra></extra>"))
+                           customdata=np.c_[[f"{int(v):,}" + ("*" if v < MIN_CLAIMS else "") for v in n.values], tops],
+                           hovertemplate="%{x}: %{y:,.0f}<br>Claims: %{customdata[0]}<br>Most claims from: %{customdata[1]}<extra></extra>"))
     style_fig(fig, f"{MEASURES[measure]} by year of loss", 380, unified=False)
     fig.update_yaxes(title=MEASURES[measure], tickprefix="" if measure == "claims" else "$")
-    note = ("Storm years stand out: hover a bar for the number of claims and the event behind most of them. "
-            + (f"Pale bars are years with fewer than {MIN_CLAIMS} claims. " if small.any() else "")
-            + f"{YEAR_MAX} is a partial year.")
+    note = about(["Storm years stand out: hover a bar for the number of claims and the event behind most of them.",
+                  f"Pale bars are years with fewer than {MIN_CLAIMS} claims." if small.any() else None,
+                  f"{YEAR_MAX} is a partial year."])
 
     decade_rows = []
     for d, g in sub.groupby("decade"):
-        decade_rows.append([years_label(g["yearOfLoss"].unique()), f"{len(g):,}", money(g["amountPaid_real"].median()),
+        decade_rows.append([years_label(g["yearOfLoss"].unique()), count_cell(len(g)), money(g["amountPaid_real"].median()),
                             money(g["amountPaid_real"].sum())])
-    small_dec = [i for i, r in enumerate(decade_rows) if int(r[1].replace(",", "")) < MIN_CLAIMS]
     decades = html.Div([html.H3("By decade of loss", style={"margin": "0 0 8px"}),
-                        table(["Loss years", "Claims", "Median claim (2025 $)", "Total paid (2025 $)"], decade_rows, small_dec),
-                        html.Div("Decades are not equal in size and each is shaped by its biggest seasons; the first covers only 1978-79 and the "
-                                 "last is partial.", className="note")])
+                        table(["Loss years", "Claims", "Median claim (2025 $)", "Total paid (2025 $)"], decade_rows),
+                        about(["Decades are not equal in size, and each is shaped by its biggest seasons.",
+                               f"The first decade starts in {YEAR_MIN} and the last is partial ({YEAR_MAX})."], "About this table")])
 
     g = sub.groupby("countyName", observed=True)
     counts = g.size()
@@ -532,8 +540,8 @@ def update_tab2(years, counties, occs, floods, metric, n):
     tbl = html.Div([
         table(["Storm", "Claims", "Total paid (2025 $)", "Median claim (2025 $)"],
               [[str(i), f"{int(r['claims']):,}", money(r["total"]), money(r["median"])] for i, r in top.iterrows()]),
-        html.Div(f"Storms with fewer than {MIN_CLAIMS} claims under these filters ({hidden}) are not shown." if hidden else "",
-                 className="note"),
+        about([f"Storms with fewer than {MIN_CLAIMS} claims under these filters ({hidden}) are not shown."] if hidden else [],
+              "About this table"),
     ], className="card")
 
     return coverage, fig, tbl, other_events_card(sub)
@@ -561,13 +569,14 @@ def age_by_decade(sub):
     style_fig(fig, "Median payout by building age, within each decade of loss", 420, unified=False, center_title=True)
     log_dollar_axis(fig, "y", "Median payout (2025 $, log scale)")
     fig.update_xaxes(title="Building age at time of loss")
-    counts = [[labels[d]] + [f"{int(stats.loc[(d, b), 'n']):,}" if (d, b) in stats.index else "0" for b in bands] for d in sorted(labels)]
+    counts = [[labels[d]] + [count_cell(stats.loc[(d, b), "n"]) if (d, b) in stats.index else "0" for b in bands] for d in sorted(labels)]
     return fig, table(["Loss years"] + bands, counts)
 
 
 def update_tab3(years, counties, occs, floods, factor):
-    col, order, note = FACTORS[factor]
+    col, order, factor_note = FACTORS[factor]
     sub = filtered(years, counties, occs, floods)
+    note = about([factor_note, f"Groups with fewer than {MIN_CLAIMS} claims are listed in the table (marked *) but not drawn."])
     if sub.empty:
         return empty_fig(NO_CLAIMS, 460), html.Div(), note, html.Div()
     g = sub.groupby(col, observed=True)["amountPaid_real"]
@@ -596,20 +605,16 @@ def update_tab3(years, counties, occs, floods, factor):
     style_fig(fig, f"Payout by {factor.title()}", 460, unified=False, center_title=True)
     log_dollar_axis(fig, "y", "Payout (2025 $, log scale)")
     fig.update_xaxes(tickangle=0, tickfont=dict(size=12))
-    rows, dim = [], []
-    for k, (i, r) in enumerate(st.iterrows()):
-        if r["n"] >= MIN_CLAIMS:
-            rows.append([str(i), f"{int(r['n']):,}", f"{100 * r['n'] / total_n:.1f}%", money(r["q50"]), money(r["mean"]),
-                         f"{money(r['q25'])} to {money(r['q75'])}"])
-        else:
-            rows.append([str(i), f"{int(r['n']):,}", f"{100 * r['n'] / total_n:.1f}%", "-", "-", f"fewer than {MIN_CLAIMS} claims"])
-            dim.append(k)
-    tbl = table([factor.title(), "Claims", "% of Claims", "Median Payout", "Mean Payout", "Middle 50% of Claims"], rows, dim)
+    rows = [[str(i), count_cell(r["n"]), f"{100 * r['n'] / total_n:.1f}%", money(r["q50"]), money(r["mean"]),
+             f"{money(r['q25'])} to {money(r['q75'])}"] for i, r in st.iterrows()]
+    tbl = table([factor.title(), "Claims", "% of Claims", "Median Payout", "Mean Payout", "Middle 50% of Claims"], rows)
     extra = html.Div()
     if factor == "Building age":
         extra_fig, counts = age_by_decade(sub)
         extra = html.Div([dcc.Graph(figure=extra_fig, config={"displayModeBar": False}), chart_hint(),
-                          html.Div("Claims behind each line, by decade of loss and building age:", className="note"), counts],
+                          about(["Each line is one decade of loss, so buildings are compared with others of the same age band from the same era.",
+                                 f"A point is drawn only where at least {MIN_CLAIMS} claims support it."]),
+                          html.H3("Claims behind each line", style={"margin": "12px 0 8px"}), counts],
                          className="card")
     return fig, tbl, note, extra
 
