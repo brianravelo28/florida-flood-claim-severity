@@ -7,31 +7,27 @@
     "dateOfLoss before 1978": 0,
     "outside Florida bounds": 105
   },
-  "track_points": 23999,
-  "storm_matched_pct": 77.82,
+  "rows_identical_to_an_earlier_row_except_id": 1270,
   "construction_year_unknown_pct": 3.76,
+  "construction_year_unusable": 11719,
+  "construction_date_placeholder_1492": 11466,
+  "event_label_pct": 88.3,
+  "named_storm_label_pct": 75.9,
   "cpi_interpolated_months": [
     "2025-10"
   ],
   "cpi_base": "2025 average CPI-U (FRED CPIAUCSL) = 322.186",
   "checks": {
     "dateOfLoss >= 1978": true,
-    "building_age in [0, 200]": true,
+    "building age in [0, 200]": true,
     "lat/lon inside Florida bounds": true,
     "amountPaid > 0": true,
-    "log_amountpaid complete": true,
-    "encoded categoricals complete": true,
+    "amountPaid_real > 0": true,
+    "every claim has a flood zone group and an occupancy group": true,
     "all present county codes are valid FL FIPS": true,
     "missing lat/lon < 2%": true,
-    "historical_storm_freq is non-negative": true
-  },
-  "skew_raw": 17.412,
-  "skew_log": -0.361,
-  "flood_event_check": {
-    "claims_labelled_hurricane_or_TS_by_FEMA": 236318,
-    "matched_to_any_storm_pct": 95.8,
-    "matched_to_same_named_storm_pct": 95.6
+    "every claim has an event group": true
   },
   "final_rows": 311507,
-  "final_columns": 41
+  "final_columns": 28
 }

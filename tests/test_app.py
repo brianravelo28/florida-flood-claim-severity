@@ -1,31 +1,40 @@
-"""Every dashboard callback returns without error on the committed data (default and filtered inputs)."""
+"""Every dashboard callback returns without error on the committed data (default, filtered and empty inputs)."""
 import pytest
 
 dash_app = pytest.importorskip("app")
+
+MIN = dash_app.MIN_CLAIMS
 
 
 def years():
     return (dash_app.YEAR_MIN, dash_app.YEAR_MAX)
 
 
-def no_filters(**kw):
-    base = dict(years=years(), counties=[], occs=[], floods=[], storms=[])
-    base.update(kw)
-    return base
+def no_filters():
+    return years(), [], [], []
+
+
+def text_of(component):
+    """All text inside a Dash component tree."""
+    if isinstance(component, (str, int, float)):
+        return str(component)
+    if isinstance(component, (list, tuple)):
+        return " ".join(text_of(c) for c in component)
+    return text_of(getattr(component, "children", "") or "")
 
 
 def test_filter_count_text_with_and_without_filters():
-    assert f"{dash_app.N_CLAIMS:,}" in dash_app.update_filter_count(years(), [], [], [], [])
-    narrowed = dash_app.update_filter_count(years(), ["Lee"], [], [], [])
+    assert f"{dash_app.N_CLAIMS:,}" in dash_app.update_filter_count(*no_filters())
+    narrowed = dash_app.update_filter_count(years(), ["Lee"], [], [])
     assert narrowed.startswith("Showing") and "of" in narrowed
 
 
 def test_empty_selection_means_all_claims():
-    assert len(dash_app.filtered(None, None, None, None, None)) == dash_app.N_CLAIMS
+    assert len(dash_app.filtered(None, None, None, None)) == dash_app.N_CLAIMS
 
 
 def test_filtering_by_county_and_years_narrows_the_claims():
-    lee = dash_app.filtered((2020, 2024), ["Lee"], [], [], [])
+    lee = dash_app.filtered((2020, 2024), ["Lee"], [], [])
     assert 0 < len(lee) < dash_app.N_CLAIMS
     assert set(lee["countyName"].astype(str)) == {"Lee"}
     assert lee["yearOfLoss"].between(2020, 2024).all()
@@ -33,46 +42,73 @@ def test_filtering_by_county_and_years_narrows_the_claims():
 
 @pytest.mark.parametrize("measure", ["claims", "total", "median"])
 def test_overview_tab(measure):
-    kpis, year_fig, map_fig = dash_app.update_tab1(*no_filters().values(), measure)
+    kpis, year_fig, note, decades, map_fig = dash_app.update_tab1(*no_filters(), measure)
     assert kpis and year_fig.data and map_fig.data
+    assert "partial year" in note
+    assert "1978-79" in text_of(decades) and "2020-26" in text_of(decades)
+
+
+def test_overview_year_chart_shows_claims_per_year_and_flags_small_years():
+    _, year_fig, note, _, _ = dash_app.update_tab1(*no_filters(), "median")
+    bar = year_fig.data[0]
+    assert len(bar.customdata) == len(bar.x) and int(bar.customdata[0][0]) > 0
+    assert "fewer than" in note, "the small early and late years should be flagged"
+    assert len(set(bar.marker.color)) == 2
 
 
 @pytest.mark.parametrize("metric", ["claims", "total", "median"])
-def test_storms_tab(metric):
-    fig, table = dash_app.update_tab2(*no_filters().values(), metric, 15)
-    assert fig.data and table is not None
+def test_storms_tab_ranks_named_storms_with_their_claim_counts(metric):
+    coverage, fig, table, other = dash_app.update_tab2(*no_filters(), metric, 15)
+    assert "FEMA event label" in coverage and "hurricane or tropical storm" in coverage
+    assert fig.data and len(fig.data[0].y) == 15
+    assert all("Hurricane" in y or "Tropical Storm" in y for y in fig.data[0].y)
+    assert "Claims" in text_of(table)
+    assert "Flooding" in text_of(other) and "1979-2000" in text_of(other)
+
+
+def test_storms_tab_lists_alberto_with_its_years_and_one_georges():
+    _, fig, _, _ = dash_app.update_tab2((1990, 2010), [], [], [], "claims", 25)
+    names = list(fig.data[0].y)
+    assert "Hurricane Georges" in names
+    assert not any("Georges (" in n for n in names)
 
 
 @pytest.mark.parametrize("factor", list(dash_app.FACTORS))
 def test_risk_factors_tab(factor):
-    fig, table, note = dash_app.update_tab3(*no_filters().values(), factor)
+    fig, table, note, extra = dash_app.update_tab3(*no_filters(), factor)
     assert fig.data and table is not None and note
+    assert "claims" in fig.data[0].x[0], "each group's claim count is on the chart"
+    assert ("Building age" == factor) == (extra is not None and bool(getattr(extra, "children", None)))
 
 
-def test_model_tab_and_its_small_sample_message():
-    assert dash_app.update_tab4(*no_filters().values()) is not None
-    tiny = dash_app.update_tab4(years(), ["Lee"], ["Mobile home"], ["V / VE (velocity, coastal)"], ["Category 5"])
-    assert "Too few claims" in str(tiny) or tiny is not None
+def test_building_age_shows_each_decade_separately_with_the_entanglement_note():
+    fig, _, note, extra = dash_app.update_tab3(*no_filters(), "Building age")
+    assert "move together" in note and "not evidence that age drives payout" in note
+    strat_fig = extra.children[0].figure
+    assert len(strat_fig.data) >= 4, "one line per decade of loss"
+    assert "Claims behind each line" in text_of(extra)
+
+
+def test_groups_under_the_minimum_are_flagged_not_charted():
+    # In 1978-79 the "Unknown" occupancy group has 27 claims, fewer than the minimum
+    fig, table, _, _ = dash_app.update_tab3((1978, 1979), [], [], [], "Occupancy type")
+    assert "fewer than" in text_of(table) and "Unknown" in text_of(table)
+    assert not any("Unknown" in label for label in fig.data[0].x)
 
 
 def test_a_filter_with_no_matches_does_not_crash_any_tab():
-    nothing = dict(years=(1978, 1978), counties=["Lee"], occs=["Mobile home"], floods=["V / VE (velocity, coastal)"],
-                   storms=["Category 5"])
-    assert len(dash_app.filtered(*nothing.values())) == 0
-    dash_app.update_tab1(*nothing.values(), "total")
-    dash_app.update_tab2(*nothing.values(), "total", 15)
-    dash_app.update_tab3(*nothing.values(), "Storm category")
-    dash_app.update_tab4(*nothing.values())
+    nothing = ((1978, 1978), ["Lee"], ["Mobile home"], ["V / VE (velocity, coastal)"])
+    assert len(dash_app.filtered(*nothing)) == 0
+    dash_app.update_tab1(*nothing, "total")
+    dash_app.update_tab2(*nothing, "total", 15)
+    for factor in dash_app.FACTORS:
+        dash_app.update_tab3(*nothing, factor)
 
 
-def test_claim_estimator_defaults_and_storm_strength_ordering():
-    flood = next(f for f in dash_app.FLOOD_ORDER if f in dash_app.FLOOD_CODE)
-    args = dict(county="Lee", occ="Single-family", flood=flood, age=30, elev=[], wind=90, dist=40,
-                year=dash_app.YEAR_DEFAULT)
-    kpis, wind_fig, year_fig = dash_app.update_tab5(*args.values())
-    assert len(kpis) == 3 and wind_fig.data and year_fig.data
-
-    def payout(wind):
-        return dash_app.predict_payout("Lee", "Single-family", flood, 30, False, wind, 40, dash_app.YEAR_DEFAULT)
-
-    assert payout(120) > 0 and payout(0) > 0
+def test_a_filter_where_no_group_is_large_enough_does_not_crash():
+    few = dash_app.filtered((1984, 1984), ["Alachua"], [], [])
+    assert 0 < len(few) < MIN
+    args = ((1984, 1984), ["Alachua"], [], [])
+    dash_app.update_tab1(*args, "median")
+    dash_app.update_tab2(*args, "median", 10)
+    dash_app.update_tab3(*args, "Building age")

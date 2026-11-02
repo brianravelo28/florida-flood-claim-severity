@@ -29,10 +29,6 @@ Thumbs.db
 *.tmp
 .cache/
 
-# Model artifacts (optional - uncomment if very large)
-# *.joblib
-# *.pkl
-
 # Jupyter
 .ipynb_checkpoints/
 
