@@ -150,4 +150,4 @@ def test_interaction_tips_live_in_the_about_sections():
 
 def test_tables_get_no_zoom_tips():
     _, _, _, decades, _ = dash_app.update_tab1(*no_filters(), "total")
-    assert "Drag to" not in text_of(decades)
+    assert "Drag to" not in text_of(decades) and "About" not in text_of(decades), "the decade table has nothing to caution about"

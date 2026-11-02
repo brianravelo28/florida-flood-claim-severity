@@ -463,8 +463,7 @@ def update_tab1(years, counties, occs, floods, measure):
         decade_rows.append([years_label(g["yearOfLoss"].unique()), count_cell(len(g)), money(g["amountPaid_real"].median()),
                             money(g["amountPaid_real"].sum())])
     decades = html.Div([html.H3("By decade of loss", style={"margin": "0 0 8px"}),
-                        table(["Loss years", "Claims", "Median claim (2025 $)", "Total paid (2025 $)"], decade_rows),
-                        about(["Each decade's median is shaped by its biggest seasons."], "About this table", tips=())])
+                        table(["Loss years", "Claims", "Median claim (2025 $)", "Total paid (2025 $)"], decade_rows)])
 
     g = sub.groupby("countyName", observed=True)
     counts = g.size()
