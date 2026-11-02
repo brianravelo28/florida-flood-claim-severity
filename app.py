@@ -358,7 +358,6 @@ def tab2_layout():
         html.Div(html.Details([
             html.Summary("About event labels"),
             html.Ul([
-                html.Li("FEMA used \"Flooding\" for several different floods across many years, so it is not one event."),
                 html.Li(ERA_NOTE),
             ]),
         ], className="about"), className="card", style={"marginTop": "12px"}),
