@@ -77,11 +77,11 @@ def test_other_events_show_a_median_even_when_they_have_few_claims():
     assert "Gray rows" not in text and "fewer than" not in text, "the flag is the asterisk; no note under the table"
 
 
-def test_the_storms_tab_keeps_its_notes_in_a_collapsible_section():
+def test_the_storms_tab_has_its_chart_tips_and_a_coverage_line():
     layout = text_of(dash_app.tab2_layout())
-    assert "About event labels" in layout
-    assert "Labels are sparse before the mid-1980s" in layout and "cover only their labeled claims" in layout
-    assert "not named hurricanes or tropical storms" not in layout
+    assert "About this chart" in layout and "Drag to zoom into part of the chart" in layout
+    coverage = dash_app.update_tab2(*no_filters(), "total", 15)[0]
+    assert "88.3% carry a FEMA event label" in coverage and "Claims with no label are not ranked below." in coverage
 
 
 def test_storms_tab_lists_alberto_with_its_years_and_one_georges():
@@ -115,7 +115,6 @@ def test_groups_under_the_minimum_are_flagged_not_charted():
     fig, table, note, _ = dash_app.update_tab3((1978, 1979), [], [], [], "Occupancy type")
     assert "27*" in text_of(table) and "Unknown" in text_of(table)
     assert not any("Unknown" in label for label in fig.data[0].x)
-    assert "marked *" in text_of(note) and "30 or more claims" in text_of(note)
 
 
 def test_a_filter_with_no_matches_does_not_crash_any_tab():

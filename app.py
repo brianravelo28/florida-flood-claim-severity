@@ -338,7 +338,7 @@ def tab1_layout():
                  className="card"),
         html.Div(id="t1-decades", className="card", style={"marginTop": "12px"}),
         html.Div([dcc.Graph(id="t1-map", config={"displayModeBar": False}),
-                  about([f"The map shows counties with {MIN_CLAIMS} or more claims."], "About this map", tips=MAP_TIPS)],
+                  about([f"Counties with fewer than {MIN_CLAIMS} claims are not shown."], "About this map", tips=MAP_TIPS)],
                  className="card", style={"marginTop": "12px"}),
     ])
 
@@ -355,12 +355,6 @@ def tab2_layout():
         html.Div([dcc.Graph(id="t2-chart", config={"displayModeBar": False}), about([])], className="card", style={"marginTop": "12px"}),
         html.Div(id="t2-table", style={"marginTop": "12px"}),
         html.Div(id="t2-other", style={"marginTop": "12px"}),
-        html.Div(html.Details([
-            html.Summary("About event labels"),
-            html.Ul([
-                html.Li(ERA_NOTE),
-            ]),
-        ], className="about"), className="card", style={"marginTop": "12px"}),
     ])
 
 
@@ -402,7 +396,6 @@ def empty_fig(message, height=300):
 
 
 NO_CLAIMS = "No claims match these filters"
-ERA_NOTE = "Labels are sparse before the mid-1980s and uneven from year to year, so totals for older events cover only their labeled claims."
 
 
 def about(items, title="About this chart", tips=CHART_TIPS):
@@ -520,7 +513,8 @@ def update_tab2(years, counties, occs, floods, metric, n):
     if sub.empty:
         return "", empty_fig(NO_CLAIMS), html.Div(), html.Div()
     coverage = (f"Of the {len(sub):,} claims shown, {pct(100 * sub['event'].notna().mean())} carry a FEMA event label and "
-                f"{pct(100 * (sub['event_group'] == 'Named storm').mean())} name a hurricane or tropical storm.")
+                f"{pct(100 * (sub['event_group'] == 'Named storm').mean())} name a hurricane or tropical storm. Claims with no label are not "
+                "ranked below.")
 
     named = event_stats(sub[sub["event_group"] == "Named storm"])
     big = named[named["claims"] >= MIN_CLAIMS]
@@ -537,8 +531,7 @@ def update_tab2(years, counties, occs, floods, metric, n):
     tbl = html.Div([
         table(["Storm", "Claims", "Total paid (2025 $)", "Median claim (2025 $)"],
               [[str(i), f"{int(r['claims']):,}", money(r["total"]), money(r["median"])] for i, r in top.iterrows()]),
-        about([f"The ranking covers storms with {MIN_CLAIMS} or more claims under these filters; {hidden} smaller "
-               f"storm{'s are' if hidden != 1 else ' is'} omitted."] if hidden else [],
+        about([f"Storms with fewer than {MIN_CLAIMS} claims under these filters ({hidden}) are not shown."] if hidden else [],
               "About this table", tips=()),
     ], className="card")
 
@@ -585,8 +578,6 @@ def update_tab3(years, counties, occs, floods, factor):
     st = st[st["n"] > 0].reindex([o for o in order if o in st.index])
     total_n = st["n"].sum()
     big = st[st["n"] >= MIN_CLAIMS]
-    note = about([factor_note, f"The chart draws groups with {MIN_CLAIMS} or more claims; smaller groups appear in the table, marked *."
-                  if len(big) < len(st) else None])
     if big.empty:
         return empty_fig(f"No group has {MIN_CLAIMS} or more claims", 460), html.Div(), note, html.Div()
     labels = [f"{AXIS_SHORT_LABELS.get(str(i), str(i))}<br>{int(r['n']):,} claims" for i, r in big.iterrows()]
@@ -612,7 +603,7 @@ def update_tab3(years, counties, occs, floods, factor):
     if factor == "Building age":
         extra_fig, counts = age_by_decade(sub)
         extra = html.Div([dcc.Graph(figure=extra_fig, config={"displayModeBar": False}),
-                          about([f"Each point is the median of {MIN_CLAIMS} or more claims."], tips=LEGEND_CHART_TIPS),
+                          about([f"A point is drawn only where at least {MIN_CLAIMS} claims support it."], tips=LEGEND_CHART_TIPS),
                           html.H3("Claims behind each line", style={"margin": "12px 0 8px"}), counts],
                          className="card")
     return fig, tbl, note, extra
