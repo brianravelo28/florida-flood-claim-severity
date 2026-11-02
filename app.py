@@ -171,6 +171,7 @@ table.eval th, table.eval td {{ text-align: left; padding: 8px 10px; border-bott
 table.eval th {{ color: {INK_2}; font-weight: 600; }}
 table.eval td.dim {{ color: {INK_3}; }}
 .chart-hint {{ margin: 4px 2px 0; color: {INK_3}; font-size: 15px; font-style: italic; }}
+.table-note {{ margin: 6px 2px 0; color: {INK_3}; font-size: 15px; font-style: italic; }}
 """
 
 CHART_HINT = (
@@ -522,9 +523,9 @@ def update_tab2(years, counties, occs, floods, metric, n):
         other_card = html.Div([
             html.H3("Other FEMA-labeled events", style={"margin": "0 0 8px"}),
             table(["Event", "Loss years", "Claims", "Total paid (2025 $)", "Median claim (2025 $)"], rows, small),
-            html.Div("These are FEMA's own labels, and none is a hurricane or tropical storm. FEMA used \"Flooding\" for several different floods across many years, "
-                     "so it is not one event. A dash means fewer than "
-                     f"{MIN_CLAIMS} claims.", className="note"),
+            html.P("These are FEMA's own labels, and none is a hurricane or tropical storm.", className="table-note"),
+            html.P("FEMA used \"Flooding\" for several different floods across many years, so it is not one event.", className="table-note"),
+            html.P(f"A dash means fewer than {MIN_CLAIMS} claims.", className="table-note"),
         ])
     return coverage, fig, tbl, other_card
 
