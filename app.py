@@ -483,6 +483,27 @@ def event_stats(sub):
     return stats[stats["claims"] > 0]
 
 
+def other_events_card(sub):
+    """The other FEMA-labeled events (and the notes that explain this tab); shown whatever the named storms look like."""
+    other = event_stats(sub[sub["event_group"] == "Other FEMA-labeled event"])
+    if other.empty:
+        other_card = html.Div(html.P(ERA_NOTE, className="table-note"))
+    else:
+        other = other.sort_values("claims", ascending=False)
+        small = [i for i, c in enumerate(other["claims"]) if c < MIN_CLAIMS]
+        rows = [[str(i), years_label([r["first"], r["last"]]), f"{int(r['claims']):,}", money(r["total"]), money(r["median"])]
+                for i, r in other.iterrows()]
+        other_card = html.Div([
+            html.H3("Other FEMA-labeled events", style={"margin": "0 0 8px"}),
+            table(["Event", "Loss years", "Claims", "Total paid (2025 $)", "Median claim (2025 $)"], rows, small),
+            html.P("FEMA's own labels for events that are not named hurricanes or tropical storms.", className="table-note"),
+            html.P("FEMA used \"Flooding\" for several different floods across many years, so it is not one event.", className="table-note"),
+            html.P(f"Gray rows have fewer than {MIN_CLAIMS} claims, so their medians are less reliable.", className="table-note"),
+            html.P(ERA_NOTE, className="table-note"),
+        ])
+    return other_card
+
+
 def update_tab2(years, counties, occs, floods, metric, n):
     sub = filtered(years, counties, occs, floods)
     if sub.empty:
@@ -495,7 +516,7 @@ def update_tab2(years, counties, occs, floods, metric, n):
     big = named[named["claims"] >= MIN_CLAIMS]
     hidden = len(named) - len(big)
     if big.empty:
-        return coverage, empty_fig("No named storm has enough claims under these filters"), html.Div(), html.Div()
+        return coverage, empty_fig("No named storm has enough claims under these filters"), html.Div(), other_events_card(sub)
     top = big.sort_values(metric, ascending=False).head(n)
     fig = go.Figure(go.Bar(x=top[metric][::-1], y=top.index.astype(str)[::-1], orientation="h", marker_color=ORANGE,
                            customdata=np.c_[top["claims"][::-1], top["total"][::-1], top["median"][::-1]],
@@ -510,23 +531,7 @@ def update_tab2(years, counties, occs, floods, metric, n):
                  className="note"),
     ])
 
-    other = event_stats(sub[sub["event_group"] == "Other FEMA-labeled event"])
-    if other.empty:
-        other_card = html.Div(html.P(ERA_NOTE, className="table-note"))
-    else:
-        other = other.sort_values("claims", ascending=False)
-        small = [i for i, c in enumerate(other["claims"]) if c < MIN_CLAIMS]
-        rows = [[str(i), years_label([r["first"], r["last"]]), f"{int(r['claims']):,}", money(r["total"]), money(r["median"])
-                 if r["claims"] >= MIN_CLAIMS else "-"] for i, r in other.iterrows()]
-        other_card = html.Div([
-            html.H3("Other FEMA-labeled events", style={"margin": "0 0 8px"}),
-            table(["Event", "Loss years", "Claims", "Total paid (2025 $)", "Median claim (2025 $)"], rows, small),
-            html.P("FEMA's own labels for events that are not named hurricanes or tropical storms.", className="table-note"),
-            html.P("FEMA used \"Flooding\" for several different floods across many years, so it is not one event.", className="table-note"),
-            html.P(f"A dash means fewer than {MIN_CLAIMS} claims.", className="table-note"),
-            html.P(ERA_NOTE, className="table-note"),
-        ])
-    return coverage, fig, tbl, other_card
+    return coverage, fig, tbl, other_events_card(sub)
 
 
 app.callback(Output("t2-coverage", "children"), Output("t2-chart", "figure"), Output("t2-table", "children"),
