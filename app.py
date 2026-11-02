@@ -419,10 +419,10 @@ def update_tab1(years, counties, occs, floods, measure):
     sub = filtered(years, counties, occs, floods)
     if sub.empty:
         return [kpi("Claims", "0")], empty_fig(NO_CLAIMS), "", html.Div(NO_CLAIMS, className="note"), empty_fig(NO_CLAIMS, 520)
-    labelled = 100 * sub["event"].notna().mean()
+    labeled = 100 * sub["event"].notna().mean()
     kpis = [kpi("Claims", f"{len(sub):,}"), kpi("Total paid", money(sub["amountPaid_real"].sum()), "2025 dollars"),
             kpi("Median claim", money(sub["amountPaid_real"].median()), "2025 dollars"),
-            kpi("With a FEMA event label", pct(labelled), "of the claims shown")]
+            kpi("With a FEMA event label", pct(labeled), "of the claims shown")]
 
     by_year = sub.groupby("yearOfLoss")
     y = _measure_series(by_year, measure)
@@ -511,7 +511,7 @@ def update_tab2(years, counties, occs, floods, metric, n):
                  className="note"),
     ])
 
-    other = event_stats(sub[sub["event_group"] == "Other FEMA-labelled event"])
+    other = event_stats(sub[sub["event_group"] == "Other FEMA-labeled event"])
     if other.empty:
         other_card = html.Div()
     else:
@@ -520,9 +520,9 @@ def update_tab2(years, counties, occs, floods, metric, n):
         rows = [[str(i), years_label([r["first"], r["last"]]), f"{int(r['claims']):,}", money(r["total"]), money(r["median"])
                  if r["claims"] >= MIN_CLAIMS else "-"] for i, r in other.iterrows()]
         other_card = html.Div([
-            html.H3("Other events FEMA labels", style={"margin": "0 0 8px"}),
-            table(["Event (FEMA's label)", "Loss years", "Claims", "Total paid (2025 $)", "Median claim (2025 $)"], rows, small),
-            html.Div("These labels are not hurricanes or tropical storms. FEMA used \"Flooding\" for several different floods across many years, "
+            html.H3("Other FEMA-labeled events", style={"margin": "0 0 8px"}),
+            table(["Event", "Loss years", "Claims", "Total paid (2025 $)", "Median claim (2025 $)"], rows, small),
+            html.Div("These are FEMA's own labels, and none is a hurricane or tropical storm. FEMA used \"Flooding\" for several different floods across many years, "
                      "so it is not one event. A dash means fewer than "
                      f"{MIN_CLAIMS} claims.", className="note"),
         ])

@@ -112,7 +112,7 @@ def test_legacy_and_newer_occupancy_codes_merge_into_one_group():
     assert g[2] == g[12] == "2-4 units"
     assert g[3] == g[13] == "5+ units"
     assert {g[c] for c in (4, 6, 17, 18, 19)} == {"Non-residential"}
-    assert set(bd.OCCUPANCY_LABELS) == set(g), "every labelled occupancy code needs a group"
+    assert set(bd.OCCUPANCY_LABELS) == set(g), "every labeled occupancy code needs a group"
 
 
 def test_flood_zone_groups():
@@ -125,29 +125,29 @@ def test_a99_is_grouped_with_the_special_a_zones():
     assert enc.tolist() == [3]
 
 
-def labelled(events, years):
+def labeled(events, years):
     c = pd.DataFrame({"floodEvent": events, "yearOfLoss": years})
     return bd.label_events(c)
 
 
 def test_event_labels_keep_fema_names_and_group_them():
-    out = labelled(["Hurricane Ian", "Tropical Storm Fay", "Flooding", "Blizzard of 1993", None, "  ", "April Florida Flooding"],
+    out = labeled(["Hurricane Ian", "Tropical Storm Fay", "Flooding", "Blizzard of 1993", None, "  ", "April Florida Flooding"],
                    [2022, 2008, 1990, 1993, 2015, 2015, 2023])
     assert out["event"].tolist()[:4] == ["Hurricane Ian", "Tropical Storm Fay", "Flooding", "Blizzard of 1993"]
     assert out["event"].isna().tolist() == [False, False, False, False, True, True, False]
-    assert out["event_group"].tolist() == ["Named storm", "Named storm", "Other FEMA-labelled event", "Other FEMA-labelled event",
-                                           "No event label", "No event label", "Other FEMA-labelled event"]
+    assert out["event_group"].tolist() == ["Named storm", "Named storm", "Other FEMA-labeled event", "Other FEMA-labeled event",
+                                           "No event label", "No event label", "Other FEMA-labeled event"]
 
 
 def test_georges_is_merged_and_alberto_gets_its_year():
-    out = labelled(["Hurricane Georges (Keys)", "Hurricane Georges (Panhandle)", "Tropical Storm Alberto", "Tropical Storm Alberto"],
+    out = labeled(["Hurricane Georges (Keys)", "Hurricane Georges (Panhandle)", "Tropical Storm Alberto", "Tropical Storm Alberto"],
                    [1998, 1998, 1994, 2006])
     assert out["event"].tolist() == ["Hurricane Georges", "Hurricane Georges", "Tropical Storm Alberto (1994)", "Tropical Storm Alberto (2006)"]
     assert set(out["event_group"]) == {"Named storm"}
 
 
 def test_event_label_shares_are_recorded_for_the_report():
-    labelled(["Hurricane Ian", "Flooding", None, None], [2022, 1990, 2015, 2015])
+    labeled(["Hurricane Ian", "Flooding", None, None], [2022, 1990, 2015, 2015])
     assert bd.report["event_label_pct"] == 50.0
     assert bd.report["named_storm_label_pct"] == 25.0
 

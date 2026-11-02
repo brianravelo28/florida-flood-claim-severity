@@ -154,7 +154,7 @@ def label_events(c):
     event = event.where(~event.isin(EVENT_NEEDS_YEAR), with_year)
     named = event.str.contains(NAMED_STORM_PATTERN, case=False, na=False)
     c["event"] = event
-    c["event_group"] = np.where(event.isna(), "No event label", np.where(named, "Named storm", "Other FEMA-labelled event"))
+    c["event_group"] = np.where(event.isna(), "No event label", np.where(named, "Named storm", "Other FEMA-labeled event"))
     report["event_label_pct"] = round(100 * float(event.notna().mean()), 1)
     report["named_storm_label_pct"] = round(100 * float(named.mean()), 1)
     return c

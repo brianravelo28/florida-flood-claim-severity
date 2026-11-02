@@ -9,7 +9,7 @@ AGE_BINS = [-1, 10, 20, 30, 40, 50, 60, 500]
 ELEVATED_LABELS = ["Not elevated", "Elevated"]
 
 # FEMA's `floodEvent` label groups. "Named storm" labels start with Hurricane or Tropical Storm.
-EVENT_GROUPS = ["Named storm", "Other FEMA-labelled event", "No event label"]
+EVENT_GROUPS = ["Named storm", "Other FEMA-labeled event", "No event label"]
 NAMED_STORM_PATTERN = r"^(?:Hurricane|Tropical Storm)\b"
 
 # FEMA labels two events with one name or one event with two names; these are the only such cases in the data.
