@@ -76,9 +76,9 @@ AXIS_SHORT_LABELS = {
 }
 
 FACTOR_NOTES = {
-    "Flood zone": "FEMA flood zone the property was rated in, grouped by FEMA's zone definitions.",
+    "Flood zone": None,
     "Occupancy type": "FEMA's legacy (1-4, 6) and newer (11-19) occupancy codes describe the same building types, so they are grouped together.",
-    "Elevated building": "FEMA's elevatedBuildingIndicator.",
+    "Elevated building": None,
     "Building age": (
         f"Age at time of loss. About {REPORT['construction_year_unknown_pct']:.0f}% of buildings have an unusable construction date "
         f"({PLACEHOLDER_SHARE:.0f}% of them FEMA's 1492 placeholder, and every placeholder is flagged pre-FIRM, so they are probably old). "
@@ -334,8 +334,7 @@ def tab1_layout():
                  className="card"),
         html.Div(id="t1-decades", className="card", style={"marginTop": "12px"}),
         html.Div([dcc.Graph(id="t1-map", config={"displayModeBar": False}), chart_hint(MAP_HINT),
-                  about(["Bubbles are sized by the selected measure and colored by median claim.",
-                         f"Counties with fewer than {MIN_CLAIMS} claims are not shown."], "About this map")],
+                  about([f"Counties with fewer than {MIN_CLAIMS} claims are not shown."], "About this map")],
                  className="card", style={"marginTop": "12px"}),
     ])
 
@@ -453,9 +452,8 @@ def update_tab1(years, counties, occs, floods, measure):
                            hovertemplate="%{x}: %{y:,.0f}<br>Claims: %{customdata[0]}<br>Most claims from: %{customdata[1]}<extra></extra>"))
     style_fig(fig, f"{MEASURES[measure]} by year of loss", 380, unified=False)
     fig.update_yaxes(title=MEASURES[measure], tickprefix="" if measure == "claims" else "$")
-    note = about(["Storm years stand out: hover a bar for the number of claims and the event behind most of them.",
-                  f"Pale bars are years with fewer than {MIN_CLAIMS} claims." if small.any() else None,
-                  f"{YEAR_MAX} is a partial year."])
+    note = about([f"Pale bars are years with fewer than {MIN_CLAIMS} claims." if small.any() else None,
+                  f"{YEAR_MAX} is a partial year." if YEAR_MAX in set(y.index) else None])
 
     decade_rows = []
     for d, g in sub.groupby("decade"):
@@ -463,7 +461,7 @@ def update_tab1(years, counties, occs, floods, measure):
                             money(g["amountPaid_real"].sum())])
     decades = html.Div([html.H3("By decade of loss", style={"margin": "0 0 8px"}),
                         table(["Loss years", "Claims", "Median claim (2025 $)", "Total paid (2025 $)"], decade_rows),
-                        about(["Decades are not equal in size, and each is shaped by its biggest seasons.",
+                        about(["Each decade's median is shaped by its biggest seasons.",
                                f"The first decade starts in {YEAR_MIN} and the last is partial ({YEAR_MAX})."], "About this table")])
 
     g = sub.groupby("countyName", observed=True)
@@ -576,7 +574,7 @@ def age_by_decade(sub):
 def update_tab3(years, counties, occs, floods, factor):
     col, order, factor_note = FACTORS[factor]
     sub = filtered(years, counties, occs, floods)
-    note = about([factor_note, f"Groups with fewer than {MIN_CLAIMS} claims are listed in the table (marked *) but not drawn."])
+    note = about([factor_note])
     if sub.empty:
         return empty_fig(NO_CLAIMS, 460), html.Div(), note, html.Div()
     g = sub.groupby(col, observed=True)["amountPaid_real"]
@@ -587,6 +585,8 @@ def update_tab3(years, counties, occs, floods, factor):
     st = st[st["n"] > 0].reindex([o for o in order if o in st.index])
     total_n = st["n"].sum()
     big = st[st["n"] >= MIN_CLAIMS]
+    note = about([factor_note, f"Groups with fewer than {MIN_CLAIMS} claims are listed in the table (marked *) but not drawn."
+                  if len(big) < len(st) else None])
     if big.empty:
         return empty_fig(f"No group has {MIN_CLAIMS} or more claims", 460), html.Div(), note, html.Div()
     labels = [f"{AXIS_SHORT_LABELS.get(str(i), str(i))}<br>{int(r['n']):,} claims" for i, r in big.iterrows()]
@@ -612,8 +612,7 @@ def update_tab3(years, counties, occs, floods, factor):
     if factor == "Building age":
         extra_fig, counts = age_by_decade(sub)
         extra = html.Div([dcc.Graph(figure=extra_fig, config={"displayModeBar": False}), chart_hint(),
-                          about(["Each line is one decade of loss, so buildings are compared with others of the same age band from the same era.",
-                                 f"A point is drawn only where at least {MIN_CLAIMS} claims support it."]),
+                          about([f"A point is drawn only where at least {MIN_CLAIMS} claims support it."]),
                           html.H3("Claims behind each line", style={"margin": "12px 0 8px"}), counts],
                          className="card")
     return fig, tbl, note, extra

@@ -94,7 +94,8 @@ def test_storms_tab_lists_alberto_with_its_years_and_one_georges():
 @pytest.mark.parametrize("factor", list(dash_app.FACTORS))
 def test_risk_factors_tab(factor):
     fig, table, note, extra = dash_app.update_tab3(*no_filters(), factor)
-    assert fig.data and table is not None and note
+    assert fig.data and table is not None
+    assert (note is not None) == (factor in ("Occupancy type", "Building age")), "only the factors with a caveat get a note"
     assert "claims" in fig.data[0].x[0], "each group's claim count is on the chart"
     assert ("Building age" == factor) == (extra is not None and bool(getattr(extra, "children", None)))
 
