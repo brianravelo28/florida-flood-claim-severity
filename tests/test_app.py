@@ -64,16 +64,22 @@ def test_storms_tab_ranks_named_storms_with_their_claim_counts(metric):
     assert all("Hurricane" in y or "Tropical Storm" in y for y in fig.data[0].y)
     assert "Claims" in text_of(table)
     assert "Flooding" in text_of(other) and "1979-2000" in text_of(other)
-    assert "Labels are sparse before the mid-1980s" in text_of(other) and "does not compare eras" in text_of(other)
 
 
 def test_other_events_show_a_median_even_when_they_have_few_claims():
-    # 2025 has one other FEMA-labeled event with 26 claims: its median is shown, and the table says gray rows are less reliable
+    # 2025 has one other FEMA-labeled event with 26 claims: its median is shown and its claim count carries an asterisk
     _, _, _, other = dash_app.update_tab2((2025, 2025), [], [], [], "total", 10)
     text = text_of(other)
-    assert "Nor'easter" in text and " 26 " in text + " "
-    assert "$" in text.split("26")[1][:30], "the median should follow the claim count"
-    assert "Gray rows have fewer than 30 claims" in text
+    assert "Nor'easter" in text and "26*" in text
+    assert "$" in text.split("26*")[1][:30], "the median should follow the claim count"
+    assert "Gray rows" not in text and "fewer than" not in text, "the flag is the asterisk; no note under the table"
+
+
+def test_the_storms_tab_keeps_its_notes_in_a_collapsible_section():
+    layout = text_of(dash_app.tab2_layout())
+    assert "About event labels" in layout
+    assert "not one event" in layout and "does not compare eras" in layout
+    assert "not named hurricanes or tropical storms" not in layout
 
 
 def test_storms_tab_lists_alberto_with_its_years_and_one_georges():

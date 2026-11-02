@@ -351,8 +351,15 @@ def tab2_layout():
         ], className="controls card"),
         html.Div(id="t2-coverage", className="note"),
         html.Div([dcc.Graph(id="t2-chart", config={"displayModeBar": False}), chart_hint()], className="card", style={"marginTop": "12px"}),
-        html.Div(id="t2-table", className="card", style={"marginTop": "12px"}),
-        html.Div(id="t2-other", className="card", style={"marginTop": "12px"}),
+        html.Div(id="t2-table", style={"marginTop": "12px"}),
+        html.Div(id="t2-other", style={"marginTop": "12px"}),
+        html.Div(html.Details([
+            html.Summary("About event labels"),
+            html.Ul([
+                html.Li("FEMA used \"Flooding\" for several different floods across many years, so it is not one event."),
+                html.Li(ERA_NOTE),
+            ]),
+        ], className="about"), className="card", style={"marginTop": "12px"}),
     ])
 
 
@@ -398,10 +405,12 @@ ERA_NOTE = "Labels are sparse before the mid-1980s and uneven from year to year,
 
 
 def table(headers, rows, dim_rows=()):
-    """A plain results table; rows listed in dim_rows (small groups) are shown in a muted color."""
+    """A plain results table. A cell may be (text, tooltip); rows listed in dim_rows (small groups) are shown in a muted color."""
     return html.Table([
         html.Thead(html.Tr([html.Th(h) for h in headers])),
-        html.Tbody([html.Tr([html.Td(v, className="dim" if i in dim_rows else None) for v in row]) for i, row in enumerate(rows)]),
+        html.Tbody([html.Tr([html.Td(v[0], title=v[1], className="dim" if i in dim_rows else None) if isinstance(v, tuple)
+                             else html.Td(v, className="dim" if i in dim_rows else None) for v in row])
+                    for i, row in enumerate(rows)]),
     ], className="eval")
 
 
@@ -484,24 +493,20 @@ def event_stats(sub):
 
 
 def other_events_card(sub):
-    """The other FEMA-labeled events (and the notes that explain this tab); shown whatever the named storms look like."""
+    """The other FEMA-labeled events; shown whatever the named storms look like. A claim count under MIN_CLAIMS gets an asterisk."""
     other = event_stats(sub[sub["event_group"] == "Other FEMA-labeled event"])
     if other.empty:
-        other_card = html.Div(html.P(ERA_NOTE, className="table-note"))
-    else:
-        other = other.sort_values("claims", ascending=False)
-        small = [i for i, c in enumerate(other["claims"]) if c < MIN_CLAIMS]
-        rows = [[str(i), years_label([r["first"], r["last"]]), f"{int(r['claims']):,}", money(r["total"]), money(r["median"])]
-                for i, r in other.iterrows()]
-        other_card = html.Div([
-            html.H3("Other FEMA-labeled events", style={"margin": "0 0 8px"}),
-            table(["Event", "Loss years", "Claims", "Total paid (2025 $)", "Median claim (2025 $)"], rows, small),
-            html.P("FEMA's own labels for events that are not named hurricanes or tropical storms.", className="table-note"),
-            html.P("FEMA used \"Flooding\" for several different floods across many years, so it is not one event.", className="table-note"),
-            html.P(f"Gray rows have fewer than {MIN_CLAIMS} claims, so their medians are less reliable.", className="table-note"),
-            html.P(ERA_NOTE, className="table-note"),
-        ])
-    return other_card
+        return html.Div()
+    other = other.sort_values("claims", ascending=False)
+    rows = []
+    for i, r in other.iterrows():
+        n = int(r["claims"])
+        claims_cell = f"{n:,}" if n >= MIN_CLAIMS else (f"{n:,}*", f"Fewer than {MIN_CLAIMS} claims")
+        rows.append([str(i), years_label([r["first"], r["last"]]), claims_cell, money(r["total"]), money(r["median"])])
+    return html.Div([
+        html.H3("Other FEMA-labeled events", style={"margin": "0 0 8px"}),
+        table(["Event", "Loss years", "Claims", "Total paid (2025 $)", "Median claim (2025 $)"], rows),
+    ], className="card")
 
 
 def update_tab2(years, counties, occs, floods, metric, n):
@@ -529,7 +534,7 @@ def update_tab2(years, counties, occs, floods, metric, n):
               [[str(i), f"{int(r['claims']):,}", money(r["total"]), money(r["median"])] for i, r in top.iterrows()]),
         html.Div(f"Storms with fewer than {MIN_CLAIMS} claims under these filters ({hidden}) are not shown." if hidden else "",
                  className="note"),
-    ])
+    ], className="card")
 
     return coverage, fig, tbl, other_events_card(sub)
 
