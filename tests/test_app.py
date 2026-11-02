@@ -44,7 +44,7 @@ def test_filtering_by_county_and_years_narrows_the_claims():
 def test_overview_tab(measure):
     kpis, year_fig, note, decades, map_fig = dash_app.update_tab1(*no_filters(), measure)
     assert kpis and year_fig.data and map_fig.data
-    assert "partial year" in text_of(note)
+    assert "partial" not in text_of(note) and "partial" not in text_of(decades)
     assert "1978-79" in text_of(decades) and "2020-26" in text_of(decades)
 
 

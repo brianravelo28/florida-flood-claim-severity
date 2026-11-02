@@ -243,7 +243,7 @@ def header():
                      style={"color": INK_2, "marginBottom": "16px"}),
             html.Div(
                 [
-                    kpi("Paid claims", f"{N_CLAIMS:,}", f"Florida, {YEAR_MIN}-{YEAR_MAX} ({YEAR_MAX} is a partial year)"),
+                    kpi("Paid claims", f"{N_CLAIMS:,}", f"Florida, {YEAR_MIN}-{YEAR_MAX}"),
                     kpi("Total paid", money(SUMMARY["total_paid"]), "2025 dollars"),
                     kpi("Median paid claim", money(SUMMARY["median_claim"]), "2025 dollars"),
                     kpi("Claims with a FEMA event label", pct(SUMMARY["event_label_pct"]),
@@ -458,8 +458,7 @@ def update_tab1(years, counties, occs, floods, measure):
                            hovertemplate="%{x}: %{y:,.0f}<br>Claims: %{customdata[0]}<br>Most claims from: %{customdata[1]}<extra></extra>"))
     style_fig(fig, f"{MEASURES[measure]} by year of loss", 380, unified=False)
     fig.update_yaxes(title=MEASURES[measure], tickprefix="" if measure == "claims" else "$")
-    note = about([f"Pale bars are years with fewer than {MIN_CLAIMS} claims." if small.any() else None,
-                  f"{YEAR_MAX} is a partial year." if YEAR_MAX in set(y.index) else None])
+    note = about([f"Pale bars are years with fewer than {MIN_CLAIMS} claims." if small.any() else None])
 
     decade_rows = []
     for d, g in sub.groupby("decade"):
@@ -467,8 +466,7 @@ def update_tab1(years, counties, occs, floods, measure):
                             money(g["amountPaid_real"].sum())])
     decades = html.Div([html.H3("By decade of loss", style={"margin": "0 0 8px"}),
                         table(["Loss years", "Claims", "Median claim (2025 $)", "Total paid (2025 $)"], decade_rows),
-                        about(["Each decade's median is shaped by its biggest seasons.",
-                               f"The first decade starts in {YEAR_MIN} and the last is partial ({YEAR_MAX})."], "About this table")])
+                        about(["Each decade's median is shaped by its biggest seasons."], "About this table")])
 
     g = sub.groupby("countyName", observed=True)
     counts = g.size()
