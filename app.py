@@ -484,6 +484,12 @@ app.callback(Output("t1-kpis", "children"), Output("t1-year-chart", "figure"), O
              *FILTERS, Input("t1-measure", "value"))(update_tab1)
 
 
+def storm_label(name, year):
+    """A storm's name with its loss year, so it is easy to place ('Hurricane Ian (2022)'); a label that already ends in a year stays as is."""
+    name = str(name)
+    return name if name.endswith(")") and name[-5:-1].isdigit() else f"{name} ({int(year)})"
+
+
 def event_stats(sub):
     stats = sub.groupby("event", observed=True).agg(
         claims=("amountPaid_real", "size"), total=("amountPaid_real", "sum"), median=("amountPaid_real", "median"),
@@ -522,7 +528,8 @@ def update_tab2(years, counties, occs, floods, metric, n):
     if big.empty:
         return coverage, empty_fig(f"No named storm reaches {MIN_CLAIMS} claims under these filters"), html.Div(), other_events_card(sub)
     top = big.sort_values(metric, ascending=False).head(n)
-    fig = go.Figure(go.Bar(x=top[metric][::-1], y=top.index.astype(str)[::-1], orientation="h", marker_color=ORANGE,
+    names = [storm_label(i, r["first"]) for i, r in top.iterrows()]
+    fig = go.Figure(go.Bar(x=top[metric][::-1], y=names[::-1], orientation="h", marker_color=ORANGE,
                            customdata=np.c_[top["claims"][::-1], top["total"][::-1], top["median"][::-1]],
                            hovertemplate="%{y}<br>Claims: %{customdata[0]:,.0f}<br>Total paid: %{customdata[1]:$,.0f}"
                                          "<br>Median claim: %{customdata[2]:$,.0f}<extra></extra>"))
@@ -530,7 +537,7 @@ def update_tab2(years, counties, occs, floods, metric, n):
     fig.update_xaxes(title=MEASURES[metric], tickprefix="" if metric == "claims" else "$")
     tbl = html.Div([
         table(["Storm", "Claims", "Total paid (2025 $)", "Median claim (2025 $)"],
-              [[str(i), f"{int(r['claims']):,}", money(r["total"]), money(r["median"])] for i, r in top.iterrows()]),
+              [[name, f"{int(r['claims']):,}", money(r["total"]), money(r["median"])] for name, (_, r) in zip(names, top.iterrows())]),
         about([f"Storms with fewer than {MIN_CLAIMS} claims under these filters ({hidden}) are not shown."] if hidden else [],
               "About this table", tips=()),
     ], className="card")

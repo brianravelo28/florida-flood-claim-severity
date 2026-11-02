@@ -63,7 +63,8 @@ def test_storms_tab_ranks_named_storms_with_their_claim_counts(metric):
     coverage, fig, table, other = dash_app.update_tab2(*no_filters(), metric, 15)
     assert "FEMA event label" in coverage and "hurricane or tropical storm" in coverage
     assert fig.data and len(fig.data[0].y) == 15
-    assert all("Hurricane" in y or "Tropical Storm" in y for y in fig.data[0].y)
+    assert all(("Hurricane" in y or "Tropical Storm" in y) and y.endswith(")") for y in fig.data[0].y), "each storm carries its year"
+    assert "Hurricane Ian (2022)" in text_of(table) or "Hurricane Helene (2024)" in text_of(table)
     assert "Claims" in text_of(table)
     assert "Flooding" in text_of(other) and "1979-2000" in text_of(other)
 
@@ -87,8 +88,9 @@ def test_the_storms_tab_has_its_chart_tips_and_a_coverage_line():
 def test_storms_tab_lists_alberto_with_its_years_and_one_georges():
     _, fig, _, _ = dash_app.update_tab2((1990, 2010), [], [], [], "claims", 25)
     names = list(fig.data[0].y)
-    assert "Hurricane Georges" in names
-    assert not any("Georges (" in n for n in names)
+    assert "Hurricane Georges (1998)" in names
+    assert not any("Keys" in n or "Panhandle" in n for n in names)
+    assert not any(n.count("(") > 1 for n in names), "a year is added once"
 
 
 @pytest.mark.parametrize("factor", list(dash_app.FACTORS))
