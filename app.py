@@ -255,20 +255,26 @@ def header():
                 [
                     html.Summary("About this data"),
                     html.Ul([
-                        html.Li(f"Claims: OpenFEMA NFIP Redacted Claims (v3), pulled {FEMA_PULL_DATE}. NFIP is the National Flood Insurance "
-                                "Program. Prices: CPI-U (Consumer Price Index for All Urban Consumers) from FRED, so a 1992 claim and a "
-                                "2024 claim are comparable."),
-                        html.Li("Only claims that were actually paid are included (payout = building + contents + increased-cost-of-compliance). "
-                                f"About {CLOSED_WITHOUT_PAYMENT_PCT:.0f}% of claims were closed without payment and are excluded, so this "
-                                "describes the cost of a claim given that it was paid."),
-                        html.Li("Event names are FEMA's own label for the claim (its floodEvent field). Claims with no label are not necessarily "
-                                "unrelated to storms."),
-                        html.Li("These are patterns in past claims, not causes. Payouts have grown much faster than inflation, and the data do not "
-                                "say why."),
-                        html.Li("Locations are deliberately blurred by FEMA to 0.1 degree (about 7 miles), so a point can fall in the wrong county. "
-                                f"{REPORT['rows_dropped']['outside Florida bounds']} paid claims with coordinates outside Florida were dropped. "
-                                f"{SUMMARY['duplicates_kept']:,} rows are identical to another row on every field except id; they are kept, "
-                                "because several units of one building can file claims with the same values."),
+                        html.Li([html.Strong("Sources: "),
+                                 f"claims are OpenFEMA NFIP Redacted Claims (v3), pulled {FEMA_PULL_DATE}. NFIP is the National Flood Insurance "
+                                 "Program. Prices are CPI-U (Consumer Price Index for All Urban Consumers) from FRED, so a 1992 claim and a "
+                                 "2024 claim are comparable."]),
+                        html.Li([html.Strong("Paid claims only: "),
+                                 "payout = building + contents + increased-cost-of-compliance. "
+                                 f"About {CLOSED_WITHOUT_PAYMENT_PCT:.0f}% of claims were closed without payment and are excluded, so this "
+                                 "describes the cost of a claim given that it was paid."]),
+                        html.Li([html.Strong("Event labels: "),
+                                 "event names are FEMA's own label for the claim (its floodEvent field). Claims with no label are not necessarily "
+                                 "unrelated to storms."]),
+                        html.Li([html.Strong("Causes: "),
+                                 "these are patterns in past claims, not causes. Payouts have grown much faster than inflation, and the data do not "
+                                 "say why."]),
+                        html.Li([html.Strong("Location: "),
+                                 "FEMA deliberately blurs locations to 0.1 degree (about 7 miles), so a point can fall in the wrong county. "
+                                 f"{REPORT['rows_dropped']['outside Florida bounds']} paid claims with coordinates outside Florida were dropped."]),
+                        html.Li([html.Strong("Repeated rows: "),
+                                 f"{SUMMARY['duplicates_kept']:,} rows are identical to another row on every field except id. They are kept, "
+                                 "because several units of one building can file claims with the same values."]),
                     ]),
                 ],
                 className="about",
