@@ -353,9 +353,6 @@ def tab2_layout():
         html.Div([dcc.Graph(id="t2-chart", config={"displayModeBar": False}), chart_hint()], className="card", style={"marginTop": "12px"}),
         html.Div(id="t2-table", className="card", style={"marginTop": "12px"}),
         html.Div(id="t2-other", className="card", style={"marginTop": "12px"}),
-        html.Div("Events are FEMA's own label for each claim. Labels are sparse before the mid-1980s and uneven from year to year, so this tab "
-                 "ranks events and does not compare eras. Claims without a label are not necessarily unrelated to storms.",
-                 className="note"),
     ])
 
 
@@ -397,6 +394,7 @@ def empty_fig(message, height=300):
 
 
 NO_CLAIMS = "No claims match these filters"
+ERA_NOTE = "Labels are sparse before the mid-1980s and uneven from year to year, so this tab ranks events and does not compare eras."
 
 
 def table(headers, rows, dim_rows=()):
@@ -514,7 +512,7 @@ def update_tab2(years, counties, occs, floods, metric, n):
 
     other = event_stats(sub[sub["event_group"] == "Other FEMA-labeled event"])
     if other.empty:
-        other_card = html.Div()
+        other_card = html.Div(html.P(ERA_NOTE, className="table-note"))
     else:
         other = other.sort_values("claims", ascending=False)
         small = [i for i, c in enumerate(other["claims"]) if c < MIN_CLAIMS]
@@ -526,6 +524,7 @@ def update_tab2(years, counties, occs, floods, metric, n):
             html.P("These are FEMA's own labels, and none is a hurricane or tropical storm.", className="table-note"),
             html.P("FEMA used \"Flooding\" for several different floods across many years, so it is not one event.", className="table-note"),
             html.P(f"A dash means fewer than {MIN_CLAIMS} claims.", className="table-note"),
+            html.P(ERA_NOTE, className="table-note"),
         ])
     return coverage, fig, tbl, other_card
 

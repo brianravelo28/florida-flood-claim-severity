@@ -64,6 +64,7 @@ def test_storms_tab_ranks_named_storms_with_their_claim_counts(metric):
     assert all("Hurricane" in y or "Tropical Storm" in y for y in fig.data[0].y)
     assert "Claims" in text_of(table)
     assert "Flooding" in text_of(other) and "1979-2000" in text_of(other)
+    assert "Labels are sparse before the mid-1980s" in text_of(other) and "does not compare eras" in text_of(other)
 
 
 def test_storms_tab_lists_alberto_with_its_years_and_one_georges():
