@@ -83,10 +83,10 @@ FACTOR_NOTES = {
         f"Age at time of loss. About {REPORT['construction_year_unknown_pct']:.0f}% of buildings have an unusable construction date "
         f"({PLACEHOLDER_SHARE:.0f}% of them FEMA's 1492 placeholder, and every placeholder is flagged pre-FIRM, so they are probably old). "
         "Those buildings are placed using the age of known-date pre-FIRM buildings from the same loss year. "
-        "Caution: age and loss year move together. The median building age at loss was "
+        "Age and loss year move together: the median building age at loss was "
         f"{AGE_BY_DECADE[1980]:.0f} years in the 1980s, {AGE_BY_DECADE[2010]:.0f} in the 2010s and {AGE_BY_DECADE[2020]:.0f} in the 2020s "
-        "(buildings with known dates), and payouts rose over the same period, so older buildings having larger payouts is not "
-        "evidence that age drives payout. The chart below compares building ages within each decade of loss."),
+        "(buildings with known dates), and payouts rose over the same period, so larger payouts among older buildings may reflect "
+        "when the claim happened. The chart below compares building ages within each decade of loss."),
 }
 FACTORS = {name: (col, order, FACTOR_NOTES[name]) for name, (col, order) in FACTOR_COLUMNS.items()}
 
@@ -262,11 +262,11 @@ def header():
                                  f"About {CLOSED_WITHOUT_PAYMENT_PCT:.0f}% of claims were closed without payment and are excluded, so this "
                                  "describes the cost of a claim given that it was paid."]),
                         html.Li([html.Strong("Event labels: "),
-                                 "event names are FEMA's own label for the claim (its floodEvent field). Claims with no label are not necessarily "
-                                 "unrelated to storms."]),
-                        html.Li([html.Strong("Causes: "),
-                                 "these are patterns in past claims, not causes. Payouts have grown much faster than inflation, and the data do not "
-                                 "say why."]),
+                                 "event names are FEMA's own label for the claim (its floodEvent field). A claim without a label can still be "
+                                 "storm-related."]),
+                        html.Li([html.Strong("Patterns: "),
+                                 "the figures describe associations in past claims. Payouts have grown much faster than inflation; possible reasons "
+                                 "include storm severity, rebuilding costs, coverage limits, claims handling and the mix of insured buildings."]),
                         html.Li([html.Strong("Location: "),
                                  "FEMA deliberately blurs locations to 0.1 degree (about 7 miles), so a point can fall in the wrong county. "
                                  f"{REPORT['rows_dropped']['outside Florida bounds']} paid claims with coordinates outside Florida were dropped."]),
@@ -338,7 +338,7 @@ def tab1_layout():
                  className="card"),
         html.Div(id="t1-decades", className="card", style={"marginTop": "12px"}),
         html.Div([dcc.Graph(id="t1-map", config={"displayModeBar": False}),
-                  about([f"Counties with fewer than {MIN_CLAIMS} claims are not shown."], "About this map", tips=MAP_TIPS)],
+                  about([f"The map shows counties with {MIN_CLAIMS} or more claims."], "About this map", tips=MAP_TIPS)],
                  className="card", style={"marginTop": "12px"}),
     ])
 
@@ -402,7 +402,7 @@ def empty_fig(message, height=300):
 
 
 NO_CLAIMS = "No claims match these filters"
-ERA_NOTE = "Labels are sparse before the mid-1980s and uneven from year to year, so this tab only ranks events against each other."
+ERA_NOTE = "Labels are sparse before the mid-1980s and uneven from year to year, so totals for older events cover only their labeled claims."
 
 
 def about(items, title="About this chart", tips=CHART_TIPS):
@@ -520,14 +520,13 @@ def update_tab2(years, counties, occs, floods, metric, n):
     if sub.empty:
         return "", empty_fig(NO_CLAIMS), html.Div(), html.Div()
     coverage = (f"Of the {len(sub):,} claims shown, {pct(100 * sub['event'].notna().mean())} carry a FEMA event label and "
-                f"{pct(100 * (sub['event_group'] == 'Named storm').mean())} name a hurricane or tropical storm. Claims with no label are not "
-                "ranked below.")
+                f"{pct(100 * (sub['event_group'] == 'Named storm').mean())} name a hurricane or tropical storm.")
 
     named = event_stats(sub[sub["event_group"] == "Named storm"])
     big = named[named["claims"] >= MIN_CLAIMS]
     hidden = len(named) - len(big)
     if big.empty:
-        return coverage, empty_fig("No named storm has enough claims under these filters"), html.Div(), other_events_card(sub)
+        return coverage, empty_fig(f"No named storm reaches {MIN_CLAIMS} claims under these filters"), html.Div(), other_events_card(sub)
     top = big.sort_values(metric, ascending=False).head(n)
     fig = go.Figure(go.Bar(x=top[metric][::-1], y=top.index.astype(str)[::-1], orientation="h", marker_color=ORANGE,
                            customdata=np.c_[top["claims"][::-1], top["total"][::-1], top["median"][::-1]],
@@ -538,7 +537,8 @@ def update_tab2(years, counties, occs, floods, metric, n):
     tbl = html.Div([
         table(["Storm", "Claims", "Total paid (2025 $)", "Median claim (2025 $)"],
               [[str(i), f"{int(r['claims']):,}", money(r["total"]), money(r["median"])] for i, r in top.iterrows()]),
-        about([f"Storms with fewer than {MIN_CLAIMS} claims under these filters ({hidden}) are not shown."] if hidden else [],
+        about([f"The ranking covers storms with {MIN_CLAIMS} or more claims under these filters; {hidden} smaller "
+               f"storm{'s are' if hidden != 1 else ' is'} omitted."] if hidden else [],
               "About this table", tips=()),
     ], className="card")
 
@@ -585,7 +585,7 @@ def update_tab3(years, counties, occs, floods, factor):
     st = st[st["n"] > 0].reindex([o for o in order if o in st.index])
     total_n = st["n"].sum()
     big = st[st["n"] >= MIN_CLAIMS]
-    note = about([factor_note, f"Groups with fewer than {MIN_CLAIMS} claims are listed in the table (marked *) but not drawn."
+    note = about([factor_note, f"The chart draws groups with {MIN_CLAIMS} or more claims; smaller groups appear in the table, marked *."
                   if len(big) < len(st) else None])
     if big.empty:
         return empty_fig(f"No group has {MIN_CLAIMS} or more claims", 460), html.Div(), note, html.Div()
@@ -612,7 +612,7 @@ def update_tab3(years, counties, occs, floods, factor):
     if factor == "Building age":
         extra_fig, counts = age_by_decade(sub)
         extra = html.Div([dcc.Graph(figure=extra_fig, config={"displayModeBar": False}),
-                          about([f"A point is drawn only where at least {MIN_CLAIMS} claims support it."], tips=LEGEND_CHART_TIPS),
+                          about([f"Each point is the median of {MIN_CLAIMS} or more claims."], tips=LEGEND_CHART_TIPS),
                           html.H3("Claims behind each line", style={"margin": "12px 0 8px"}), counts],
                          className="card")
     return fig, tbl, note, extra

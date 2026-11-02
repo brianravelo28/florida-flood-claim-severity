@@ -80,7 +80,7 @@ def test_other_events_show_a_median_even_when_they_have_few_claims():
 def test_the_storms_tab_keeps_its_notes_in_a_collapsible_section():
     layout = text_of(dash_app.tab2_layout())
     assert "About event labels" in layout
-    assert "Labels are sparse before the mid-1980s" in layout and "only ranks events against each other" in layout
+    assert "Labels are sparse before the mid-1980s" in layout and "cover only their labeled claims" in layout
     assert "not named hurricanes or tropical storms" not in layout
 
 
@@ -104,7 +104,7 @@ def test_risk_factors_tab(factor):
 
 def test_building_age_shows_each_decade_separately_with_the_entanglement_note():
     fig, _, note, extra = dash_app.update_tab3(*no_filters(), "Building age")
-    assert "move together" in text_of(note) and "not evidence that age drives payout" in text_of(note)
+    assert "move together" in text_of(note) and "may reflect when the claim happened" in text_of(note)
     strat_fig = extra.children[0].figure
     assert len(strat_fig.data) >= 4, "one line per decade of loss"
     assert "Claims behind each line" in text_of(extra)
@@ -115,7 +115,7 @@ def test_groups_under_the_minimum_are_flagged_not_charted():
     fig, table, note, _ = dash_app.update_tab3((1978, 1979), [], [], [], "Occupancy type")
     assert "27*" in text_of(table) and "Unknown" in text_of(table)
     assert not any("Unknown" in label for label in fig.data[0].x)
-    assert "marked *" in text_of(note) and "not drawn" in text_of(note)
+    assert "marked *" in text_of(note) and "30 or more claims" in text_of(note)
 
 
 def test_a_filter_with_no_matches_does_not_crash_any_tab():
