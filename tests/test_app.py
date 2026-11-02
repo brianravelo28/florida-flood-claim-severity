@@ -80,7 +80,7 @@ def test_other_events_show_a_median_even_when_they_have_few_claims():
 def test_the_storms_tab_keeps_its_notes_in_a_collapsible_section():
     layout = text_of(dash_app.tab2_layout())
     assert "About event labels" in layout
-    assert "does not compare eras" in layout and "not one event" not in layout
+    assert "only ranks events against each other" in layout and "does not show how storm claims changed over time" in layout
     assert "not named hurricanes or tropical storms" not in layout
 
 

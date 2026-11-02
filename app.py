@@ -402,7 +402,8 @@ def empty_fig(message, height=300):
 
 
 NO_CLAIMS = "No claims match these filters"
-ERA_NOTE = "Labels are sparse before the mid-1980s and uneven from year to year, so this tab ranks events and does not compare eras."
+ERA_NOTE = ("Labels are sparse before the mid-1980s and uneven from year to year, so this tab only ranks events against each other. "
+            "It does not show how storm claims changed over time.")
 
 
 def about(items, title="About this chart", tips=CHART_TIPS):
