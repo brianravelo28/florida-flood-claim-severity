@@ -95,7 +95,9 @@ def test_storms_tab_lists_alberto_with_its_years_and_one_georges():
 def test_risk_factors_tab(factor):
     fig, table, note, extra = dash_app.update_tab3(*no_filters(), factor)
     assert fig.data and table is not None
-    assert (note is not None) == (factor in ("Occupancy type", "Building age")), "only the factors with a caveat get a note"
+    assert "Drag to zoom into part of the chart" in text_of(note), "every chart's About section carries the zoom tip"
+    assert "legend" not in text_of(note), "no legend on these charts, so no legend tip"
+    assert ("Occupancy type" == factor) == ("codes describe the same building types" in text_of(note))
     assert "claims" in fig.data[0].x[0], "each group's claim count is on the chart"
     assert ("Building age" == factor) == (extra is not None and bool(getattr(extra, "children", None)))
 
@@ -132,3 +134,20 @@ def test_a_filter_where_no_group_is_large_enough_does_not_crash():
     dash_app.update_tab1(*args, "median")
     dash_app.update_tab2(*args, "median", 10)
     dash_app.update_tab3(*args, "Building age")
+
+
+def test_interaction_tips_live_in_the_about_sections():
+    year_note = dash_app.update_tab1(*no_filters(), "total")[2]
+    assert "Drag to zoom into part of the chart" in text_of(year_note) and "legend" not in text_of(year_note)
+    overview = text_of(dash_app.tab1_layout())
+    assert "Drag to pan the map; scroll to zoom; double-click to reset the view." in overview
+    assert "About this map" in overview
+    storms = text_of(dash_app.tab2_layout())
+    assert "Drag to zoom into part of the chart" in storms
+    extra = dash_app.update_tab3(*no_filters(), "Building age")[3]
+    assert "Click a legend entry to hide that series" in text_of(extra), "the by-decade chart has a legend"
+
+
+def test_tables_get_no_zoom_tips():
+    _, _, _, decades, _ = dash_app.update_tab1(*no_filters(), "total")
+    assert "Drag to" not in text_of(decades)

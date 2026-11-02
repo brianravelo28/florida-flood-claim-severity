@@ -162,6 +162,7 @@ body {{ margin: 0; background: {PAGE_BG}; color: {INK};
 details.about {{ margin-top: 12px; }}
 details.about summary {{ cursor: pointer; font-weight: 600; color: {INK_2}; }}
 details.about ul {{ margin: 8px 0 0; padding-left: 20px; color: {INK_2}; line-height: 1.55; font-size: 15px; }}
+details.about li {{ font-style: italic; }}
 .dash-dropdown, .dash-dropdown *, .dash-datepicker-input, .DateInput_input, .Select-value-label, .Select-input input {{ font-size: 15px !important; }}
 .dash-options-list:not(.dash-checklist) .dash-options-list-option {{ display: flex !important; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; padding: 8px 12px; margin: 0; cursor: pointer; font-size: 15px; }}
 .dash-options-list:not(.dash-checklist) .dash-options-list-option:hover {{ background: {PAGE_BG}; }}
@@ -169,18 +170,15 @@ details.about ul {{ margin: 8px 0 0; padding-left: 20px; color: {INK_2}; line-he
 table.eval {{ border-collapse: collapse; width: 100%; font-size: 15px; display: block; overflow-x: auto; }}
 table.eval th, table.eval td {{ text-align: left; padding: 8px 10px; border-bottom: 1px solid {BORDER}; }}
 table.eval th {{ color: {INK_2}; font-weight: 600; }}
-.chart-hint {{ margin: 4px 2px 0; color: {INK_3}; font-size: 15px; font-style: italic; }}
 """
 
-CHART_HINT = (
-    "Drag to zoom into part of the chart; double-click the chart to reset the view. "
-    "Click a legend entry to hide that series; double-click it to isolate it."
-)
-MAP_HINT = "Drag to pan the map; scroll to zoom; double-click to reset the view."
-
-
-def chart_hint(text=CHART_HINT):
-    return html.P(text, className="chart-hint")
+# Interaction tips, shown as bullets in a chart's 'About' section. The legend tip only goes with charts that have a legend.
+ZOOM_TIP = "Drag to zoom into part of the chart; double-click the chart to reset the view."
+LEGEND_TIP = "Click a legend entry to hide that series; double-click it to isolate it."
+MAP_TIP = "Drag to pan the map; scroll to zoom; double-click to reset the view."
+CHART_TIPS = (ZOOM_TIP,)
+LEGEND_CHART_TIPS = (ZOOM_TIP, LEGEND_TIP)
+MAP_TIPS = (MAP_TIP,)
 
 
 app = Dash(__name__, suppress_callback_exceptions=True)
@@ -336,11 +334,11 @@ def tab1_layout():
                                           value="total", clearable=False, searchable=False, style={"width": "240px"})),
         ], className="controls card"),
         html.Div(id="t1-kpis", className="kpi-row", style={"margin": "12px 0"}),
-        html.Div([dcc.Graph(id="t1-year-chart", config={"displayModeBar": False}), chart_hint(), html.Div(id="t1-year-note")],
+        html.Div([dcc.Graph(id="t1-year-chart", config={"displayModeBar": False}), html.Div(id="t1-year-note")],
                  className="card"),
         html.Div(id="t1-decades", className="card", style={"marginTop": "12px"}),
-        html.Div([dcc.Graph(id="t1-map", config={"displayModeBar": False}), chart_hint(MAP_HINT),
-                  about([f"Counties with fewer than {MIN_CLAIMS} claims are not shown."], "About this map")],
+        html.Div([dcc.Graph(id="t1-map", config={"displayModeBar": False}),
+                  about([f"Counties with fewer than {MIN_CLAIMS} claims are not shown."], "About this map", tips=MAP_TIPS)],
                  className="card", style={"marginTop": "12px"}),
     ])
 
@@ -354,7 +352,7 @@ def tab2_layout():
                                            value=15, clearable=False, searchable=False, style={"width": "110px"})),
         ], className="controls card"),
         html.Div(id="t2-coverage", className="note"),
-        html.Div([dcc.Graph(id="t2-chart", config={"displayModeBar": False}), chart_hint()], className="card", style={"marginTop": "12px"}),
+        html.Div([dcc.Graph(id="t2-chart", config={"displayModeBar": False}), about([])], className="card", style={"marginTop": "12px"}),
         html.Div(id="t2-table", style={"marginTop": "12px"}),
         html.Div(id="t2-other", style={"marginTop": "12px"}),
         html.Div(html.Details([
@@ -373,7 +371,7 @@ def tab3_layout():
                                                            value="Flood zone", clearable=False, searchable=False,
                                                            style={"width": "300px"}))],
                  className="controls card"),
-        html.Div([dcc.Graph(id="t3-chart", config={"displayModeBar": False}), chart_hint(), html.Div(id="t3-note")],
+        html.Div([dcc.Graph(id="t3-chart", config={"displayModeBar": False}), html.Div(id="t3-note")],
                  className="card", style={"marginTop": "12px"}),
         html.Div(id="t3-table", className="card", style={"marginTop": "12px"}),
         html.Div(id="t3-extra", style={"marginTop": "12px"}),
@@ -408,10 +406,10 @@ NO_CLAIMS = "No claims match these filters"
 ERA_NOTE = "Labels are sparse before the mid-1980s and uneven from year to year, so this tab ranks events and does not compare eras."
 
 
-def about(items, title="About this chart"):
-    """A collapsed 'About ...' section, styled like 'About this data', for the notes on a chart or table."""
-    items = [i for i in items if i]
-    return html.Details([html.Summary(title), html.Ul([html.Li(i) for i in items])], className="about") if items else None
+def about(items, title="About this chart", tips=CHART_TIPS):
+    """A collapsed 'About ...' section, styled like 'About this data': the caveats first, then the chart's interaction tips."""
+    entries = [i for i in items if i] + list(tips)
+    return html.Details([html.Summary(title), html.Ul([html.Li(e) for e in entries])], className="about") if entries else None
 
 
 def count_cell(n):
@@ -466,7 +464,7 @@ def update_tab1(years, counties, occs, floods, measure):
                             money(g["amountPaid_real"].sum())])
     decades = html.Div([html.H3("By decade of loss", style={"margin": "0 0 8px"}),
                         table(["Loss years", "Claims", "Median claim (2025 $)", "Total paid (2025 $)"], decade_rows),
-                        about(["Each decade's median is shaped by its biggest seasons."], "About this table")])
+                        about(["Each decade's median is shaped by its biggest seasons."], "About this table", tips=())])
 
     g = sub.groupby("countyName", observed=True)
     counts = g.size()
@@ -543,7 +541,7 @@ def update_tab2(years, counties, occs, floods, metric, n):
         table(["Storm", "Claims", "Total paid (2025 $)", "Median claim (2025 $)"],
               [[str(i), f"{int(r['claims']):,}", money(r["total"]), money(r["median"])] for i, r in top.iterrows()]),
         about([f"Storms with fewer than {MIN_CLAIMS} claims under these filters ({hidden}) are not shown."] if hidden else [],
-              "About this table"),
+              "About this table", tips=()),
     ], className="card")
 
     return coverage, fig, tbl, other_events_card(sub)
@@ -615,8 +613,8 @@ def update_tab3(years, counties, occs, floods, factor):
     extra = html.Div()
     if factor == "Building age":
         extra_fig, counts = age_by_decade(sub)
-        extra = html.Div([dcc.Graph(figure=extra_fig, config={"displayModeBar": False}), chart_hint(),
-                          about([f"A point is drawn only where at least {MIN_CLAIMS} claims support it."]),
+        extra = html.Div([dcc.Graph(figure=extra_fig, config={"displayModeBar": False}),
+                          about([f"A point is drawn only where at least {MIN_CLAIMS} claims support it."], tips=LEGEND_CHART_TIPS),
                           html.H3("Claims behind each line", style={"margin": "12px 0 8px"}), counts],
                          className="card")
     return fig, tbl, note, extra
