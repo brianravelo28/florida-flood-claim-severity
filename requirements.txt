@@ -1,9 +1,7 @@
-# Full pipeline + dashboard (data download, cleaning, storm join, training, app).
+# Full pipeline + dashboard (data download, cleaning, app).
 # Pinned to the versions this project is tested with on Python 3.13 and 3.14 (hosted build uses requirements-render.txt).
 pandas==3.0.6
 numpy==2.5.4
-scikit-learn==1.9.1
-lightgbm==4.7.0
 pyarrow==26.0.0
 requests==2.34.2
 plotly==7.1.0

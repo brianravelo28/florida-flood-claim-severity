@@ -1,26 +1,27 @@
 # Methodology
 
-How the numbers in the README and the dashboard are produced, what they support, and what they do not. Every figure here comes from a file the pipeline writes (`data/build_report.json`, `data/model_metrics.json`, `data/year_control_model.json`, `data/ablation_*.json`) or from the cleaned dataset it builds.
+How the numbers in the README and the dashboard are produced. Every figure here comes from a file the pipeline writes (`deploy_data/summary.json`, `deploy_data/build_report.json`, `deploy_data/claims.parquet`) or from the constants in `constants.py`.
 
-**Terms used throughout.** NFIP is the National Flood Insurance Program; FEMA (Federal Emergency Management Agency) runs it and publishes its claims through OpenFEMA. NOAA (National Oceanic and Atmospheric Administration) publishes HURDAT2, the Atlantic hurricane database of storm positions and wind speeds every six hours. CPI-U is the Consumer Price Index for All Urban Consumers, used to put payouts in constant dollars. FIRM is a community's Flood Insurance Rate Map; a building is "post-FIRM" if construction started after the community's first FIRM (or after 1974-12-31, whichever is later). LightGBM is a gradient-boosted decision-tree library. R² is the share of variance a model explains (0 is no better than predicting the average, 1 is perfect, below 0 is worse than the average).
+**Terms.** NFIP is the National Flood Insurance Program, run by FEMA (the Federal Emergency Management Agency), which publishes its claims through OpenFEMA. CPI-U is the Consumer Price Index for All Urban Consumers, used to put payouts in constant dollars. A FIRM is a community's Flood Insurance Rate Map; FEMA calls a building "post-FIRM" when construction started after December 31, 1974 or after the community's first FIRM, whichever is later. The base flood elevation is the flood level with a 1% chance of being reached in any year, used to rate a building. A median is the middle value: half of the claims are larger and half are smaller.
 
-Contents: [Data sources](#data-sources) · [Data and cleaning](#data-and-cleaning) · [Storm join](#storm-join) · [Model](#model) · [Evaluation](#evaluation) · [Payouts over time](#payouts-over-time) · [Is building age a stand-in for the loss year?](#is-building-age-a-stand-in-for-the-loss-year) · [Claim Estimator](#claim-estimator) · [Limitations](#limitations) · [Reproducibility](#reproducibility) · [Deployment notes](#deployment-notes)
+Contents: [Data sources](#data-sources) · [Data and cleaning](#data-and-cleaning) · [Event labels](#event-labels) · [Payouts over time](#payouts-over-time) · [Risk factors](#risk-factors) · [Reading the numbers](#reading-the-numbers) · [Reproducibility](#reproducibility) · [Deployment notes](#deployment-notes)
 
 ## Data sources
 
 | Source | What | Version used |
 |---|---|---|
-| [OpenFEMA NFIP Redacted Claims](https://www.fema.gov/openfema-data-page/nfip-redacted-claims-v3) | Florida claims, 1978 to 2026 | v3 (web service `NfipClaims`), pulled 2026-10-20: 448,618 Florida rows. FEMA last refreshed the dataset on 2026-09-09. |
-| [NOAA HURDAT2](https://www.nhc.noaa.gov/data/) | Atlantic storm tracks | The 1851-2025 release current at the time of the pull. The filename changes with each release, so the fetcher looks it up on the NHC data page. |
-| [FRED CPIAUCSL](https://fred.stlouisfed.org/series/CPIAUCSL) | CPI-U, all items, seasonally adjusted, monthly | Series complete back to 1947 except October 2025 (see below). |
+| [OpenFEMA NFIP Redacted Claims](https://www.fema.gov/openfema-data-page/nfip-redacted-claims-v3) | Florida claims, 1978 to 2026 | v3 (web service `NfipClaims`): 448,618 Florida rows and 28 fields, pulled 2026-11-03. FEMA last refreshed the dataset on 2026-09-09. |
+| [FRED CPIAUCSL](https://fred.stlouisfed.org/series/CPIAUCSL) | CPI-U, all items, seasonally adjusted, monthly | Complete back to 1947 except October 2025, which has no published value. |
 
-Claims data are published by FEMA under OpenFEMA's terms of use. Version 2 of the claims dataset was retired by FEMA on 2026-10-15; see [Reproducibility](#reproducibility) for how the two versions compare.
+OpenFEMA data are published under OpenFEMA's terms of use. This project is not endorsed by FEMA.
+
+**Data versions.** FEMA retired version 2 of the claims dataset on 2026-10-15. A pull of v2 (448,425 Florida rows, frozen 2026-06-01) and the v3 pull differ little: v3 has 193 more rows (mostly recent losses), the same count of placeholder construction dates (19,370), slightly different values in about 0.3% of building payments and 0.1% of contents payments (the largest change is about +$38 million in 2024 payments), and a filled-in community name (blank for 51% of v2 rows). The claim `id` is an integer in v3 and a UUID in v2. Two v3 pulls, 2026-10-20 and 2026-11-03, agree on every id and on every field they share.
 
 ## Data and cleaning
 
-**Payout.** Each claim's payout is the sum of the three paid fields: building, contents and increased cost of compliance. FEMA has no single total field.
+**Payout.** A claim's payout is its building, contents and increased-cost-of-compliance payments added together; FEMA has no single total field.
 
-**Exclusions.** `build_dataset.py` logs every row it drops and why (`data/build_report.json`):
+**Exclusions.** `build_dataset.py` logs every row it drops and why (`build_report.json`):
 
 | Step | Rows dropped | Remaining |
 |---|---|---|
@@ -30,149 +31,149 @@ Claims data are published by FEMA under OpenFEMA's terms of use. Version 2 of th
 | Loss date before 1978 | 0 | 311,612 |
 | Coordinates outside the Florida bounding box | 105 | **311,507** |
 
-About 30% of claims were closed without payment, so everything here describes severity given a paid claim. It says nothing about whether a claim is paid or how many claims a storm produces. The 105 out-of-box claims have coordinates in other states (many near New York City); FEMA's location blurring cannot explain a move that large, and the cause is unknown.
+About 30% of claims were closed without payment, so the dashboard describes the cost of a claim given that it was paid. The 105 claims outside the Florida box have coordinates in other states (many near New York City); FEMA's location blurring explains a move of a few miles, and the cause of these is unknown.
 
-**Location.** FEMA blurs coordinates to 0.1 degree (about 7 miles) and warns that a point can land in the wrong county. Distances to a storm track are therefore approximate.
+**Location.** FEMA blurs coordinates to 0.1 degree (about 7 miles) and warns that a point can land in the wrong county or state; its county field is the reliable location. The county map uses the average coordinates of each county's claims.
 
-**Flood zones and occupancy.** Flood zones are grouped into five classes following FEMA's `ratedFloodZone` definitions (moderate-minimal, A-type without a base elevation, AE/A1-A30, V/VE coastal, and D/unknown). Two occupancy code schemes coexist in the data (1-4, 6 and 11-19) and describe the same kinds of buildings, so they are merged into eight groups; otherwise the code would act as a proxy for the era.
+**Repeated rows.** 996 rows are identical to an earlier row on every pulled field except `id`. They are kept: they cluster in multi-unit buildings and condo associations, where several units of one building file claims with the same values, and the data have no building or policy identifier to tell a repeat from a neighbor. Comparing only the original 22 fields (before cause, depth, elevation, deductible and foundation type were added) finds 1,270, so 274 of those apparent repeats are different claims. Removing all 996 moves every decade median by 0.5% at most, and the 2020-26 median by 0.1%.
 
-**Inflation.** Each payout is multiplied by (2025 average CPI-U) / (CPI-U in the claim's loss month), with the 2025 average equal to 322.186. Factors run from 0.96 to 5.14. The CPI series has no published value for October 2025; that month is filled by linear interpolation between September and November, and `build_report.json` records it.
+**Inflation.** Each payout is multiplied by (2025 average CPI-U) / (CPI-U in the claim's loss month), with the 2025 average equal to 322.186. The factors run from 0.96 to 5.14. October 2025 has no published CPI value; it is filled by linear interpolation between September and November, and `build_report.json` records it.
 
-**Unusable construction dates.** 11,719 claims (3.76%) have no usable construction year. Of these, 11,466 carry FEMA's `1492-10-12` placeholder date; every one of them is flagged pre-FIRM, so they are probably old buildings whose date is unknown, not random gaps. The other 253 have a date after the loss year, no date, or a year before 1800; only 21% of these are pre-FIRM. For the model, the building age of these claims is the overall median age, plus a `building_age_missing` flag. For the dashboard's Building age chart only, they take the median age of known-date pre-FIRM claims from the same loss year, so that 11.7k claims from every era do not land in one age bucket. Using that year-aware fill as a model feature made no difference (R² 0.201 vs 0.200).
+**Construction dates.** 11,719 claims (3.76%) have no usable construction year. 11,466 of them carry FEMA's `1492-10-12` placeholder date, and every one of those buildings is flagged pre-FIRM, so they are probably old buildings whose date is unknown. The other 253 have a date after the loss year, no date, or a year before 1800. Buildings with no usable date take the median age of known-date pre-FIRM buildings from the same loss year (that median was 9 years in the 1970s and 54 in the 2020s as the same construction era aged), so they land in a sensible age band; loss years with fewer than 30 such buildings borrow from the surrounding two years, then from all pre-FIRM claims.
 
-## Storm join
+## Event labels
 
-1. NOAA's six-hourly positions are linearly interpolated to hourly positions, because six hours at hurricane speed is about 100 miles, enough to hide a near miss.
-2. For every claim location, a haversine `BallTree` finds all track points within **150 miles**; the claim takes the closest of those within **±7 days** of its loss date. This gives the storm's name and id, its wind speed at that point (`storm_wind_speed_kt`), the distance (`distance_from_track_mi`) and the days between loss and closest approach (`days_to_storm`).
-3. 77.8% of claims (242k) match a storm; the other 22.2% have no track point within 150 miles and 7 days.
-4. `historical_storm_freq` counts distinct storms that passed within 50 miles of the claim's location in the 40 years strictly before the loss year, so a claim's own storm season is never counted.
-5. The storm category is the Saffir-Simpson category of the wind at that track point, with thresholds in knots (HURDAT2's unit): tropical depression below 34, tropical storm 34-63, Category 1 64-82, Category 2 83-95, Category 3 96-112, Category 4 113-136, Category 5 137 and above (`WIND_BREAKS_KT` in `constants.py`, shared by the pipeline and the dashboard). Claims with no storm match are "No storm". Category 5 has 6,319 claims, almost all from Andrew (1992), Michael (2018) and Ian (2022); the category is the wind at the track point closest to the claim, not the storm's landfall or peak intensity.
+FEMA labels most claims with the event behind them (`floodEvent`). The dashboard uses those labels as FEMA wrote them, with two tidy-ups: Hurricane Georges (1998) was split by FEMA into a Keys and a Panhandle label and is one event here, and the name Tropical Storm Alberto covers two storms (1994 and 2006), so it carries its year. Each claim falls in one of three groups:
 
-**How the radius and window were chosen.** FEMA labels some claims with a storm name (`floodEvent`). Using those labels as a reference, a 50-mile, ±30-day join assigned the correct storm to 67% of the claims it matched and reached only about half of the claims FEMA labels as a named storm. At 150 miles and ±7 days, 95.8% of the 236,318 claims FEMA labels as a hurricane or tropical storm match some storm, and 95.6% match the same-named storm (about 99.8% of the matches).
+| Group | Claims | Share of claims | Total paid | Share of dollars | Median claim |
+|---|---|---|---|---|---|
+| Named storm | 236,318 | 75.9% | $21.19B | 89.1% | $40,002 |
+| Other FEMA-labeled event | 38,792 | 12.5% | $1.49B | 6.3% | $16,310 |
+| No event label | 36,397 | 11.7% | $1.11B | 4.7% | $11,128 |
 
-**What that check supports.** The radius and window were chosen using the same labels the 95.6% is computed against, so the figure shows the join recovers FEMA's labelled storm, not that the join is right for every claim. It says nothing about the 22.2% unmatched claims or about unlabelled claims; what those claims are (rain floods, unnamed systems, other causes) is not established here.
+"Named storm" means the label starts with Hurricane or Tropical Storm: 45 storms. The 11 other labels include "Flooding" (17,538 claims with loss years from 1979 to 2000, so a label FEMA used for many floods), the Blizzard of 1993 and several rain and nor'easter events. Storm names carry their loss year on the Storms tab.
 
-## Model
+The share of claims with a label rises from 55.2% in 1978-79 to 97.5% in 2020-26, and the share naming a hurricane or tropical storm from 0.0% to 93.9%:
 
-- **Target:** natural log of (1 + payout in constant 2025 dollars).
-- **Algorithm:** LightGBM, **L1 (median) objective**, 250 rounds, learning rate 0.05, 31 leaves, minimum 200 claims per leaf, L2 regularization 10, 80% feature and row sampling, seed 42. The L1 objective scored slightly better than L2 on the same folds and predicts a typical (median) payout, not one pulled up by outliers. The output is a median, so it cannot be multiplied by claim counts to estimate a total loss.
-- **13 features:** building age, a flag for unusable construction date, elevated building, flood-zone group, occupancy group, storm category, storm wind speed, distance from the storm track (as miles and as a five-level band), days to the storm, storms nearby in the prior 40 years, latitude and longitude. The distance band repeats the distance in miles, and the storm category repeats the wind speed. `ablation_redundant_inputs.py` removes them with the same folds: without the band R² is 0.198, without the category 0.194, without both 0.195 (headline 0.200); with the loss year added, removing both gives 0.215 against 0.207. Those differences are inside the fold-to-fold noise described below, so the two inputs neither help nor hurt measurably, and the model keeps them.
-- **Not features:** damage amounts only exist once a claim does. Coverage limits (`totalBuildingInsuranceCoverage` and the contents equivalent) are complete for every paid claim and are set before a loss, but they cap what NFIP can pay, and the model is built to ask what storm, location and building characteristics explain. About 3.7% of building payments equal the building coverage limit exactly, and 11.3% of contents payments equal the contents limit. A model with the limits as inputs is untested.
-- **Importance** (mean absolute SHAP value, share of total): building age 27.4%, storm wind speed 18.7%, latitude 11.1%, elevated 11.0%, occupancy 7.5%, longitude 5.0%, storms nearby 4.8%, distance 4.8%, storm category 4.0%, flood zone 2.2%, missing-age flag 2.2%, days to storm 0.9%, distance band 0.5%. Importance is split among correlated features and shows what the model uses, not what causes payouts.
+| Decade of loss | 1978-79 | 1980-89 | 1990-99 | 2000-09 | 2010-19 | 2020-26 |
+|---|---|---|---|---|---|---|
+| Claims with an event label | 55.2% | 78.8% | 81.4% | 86.6% | 80.5% | 97.5% |
+| Claims naming a hurricane or tropical storm | 0.0% | 44.8% | 62.7% | 67.3% | 75.2% | 93.9% |
 
-## Evaluation
-
-**Cross-validation by loss year.** The headline score uses 5-fold cross-validation with all claims from a loss year kept in the same fold, so every claim is predicted by a model that never saw its year. Claims from one storm are close to duplicates (same weather, same year, same neighborhoods), so a random split lets the model memorize storms: it scores R² 0.41, against 0.20 by year. The random split is reported only for contrast.
-
-| Measure | Result |
-|---|---|
-| R² on the log payout, year-grouped | **0.200** |
-| R² of predicting the training average, same folds | −0.049 |
-| Median absolute percentage error | 73.9% (half of the predictions are within 74% of the actual payout) |
-| Random 80/20 split R² (leaks storms) | 0.413 |
-| Train 1978-2019, test 2020-2026: model / average | −0.239 / −0.621 |
-
-R² and the error are measured on the log payout. R² 0.20 means about a fifth of the variation in log payout is explained; it is not a statement about dollars.
-
-**Fold results.** The folds are not equal in difficulty:
-
-| Fold | Loss years | Claims | R² |
-|---|---|---|---|
-| 0 | 2024 only | 68,076 | 0.308 |
-| 1 | 10 years, 1978-2022 | 60,849 | 0.067 |
-| 2 | 13 years, 1981-2023 | 60,916 | 0.159 |
-| 3 | 13 years, 1979-2026 | 60,833 | −0.036 |
-| 4 | 12 years, 1984-2025 | 60,833 | 0.141 |
-
-The pooled score is dominated by a few seasons: 2024 holds 21.9% of the claims, 2022 holds 12.8%, 2004 holds 7.1% and 2005 holds 6.5%, so four years hold 48%. 2024 falls in a fold of its own, and its R² of 0.31 is the best of the five. Which years share a fold changes individual fold scores a lot (see the ablations below).
-
-**Bias by year.** Mean error (actual minus predicted, in log payout): 2022 +0.95 (actual about 2.6 times predicted), 1993 +1.20 (3.3 times), 2024 +0.18, 2005 +0.29, 1999 −0.72 (actual about half of predicted), 1987 −0.77. The model is least reliable for seasons that look unlike the rest.
-
-**Systematic under-prediction.** Across all held-out years the median actual claim is **1.43 times** the prediction (median error +0.354 in log payout, from `predictions.csv.gz` and the cleaned dataset). Years the model has not seen tend to be larger than the years it learned from. The L1 objective does not remove this. The Claim Estimator's own model has a 1.52x factor (see below). Both are the exponential of the median out-of-fold error, i.e. the ratio of the actual to the predicted median.
-
-**Forward in time.** Training on 1978-2019 and testing on 2020-2026 gives R² −0.239, which is better than the −0.621 of predicting the average but still negative. Payouts have grown faster than inflation (next section), and the model has no way to know the future level.
+26 of the 49 loss years have no named-storm claim, and a claim with no label can still be storm-related. The ten largest named storms by claims account for 57.3% of all claims and 76.0% of all dollars, and the largest 25 for 74.1% and 88.1%.
 
 ## Payouts over time
 
-Median paid claim in constant 2025 dollars, by decade of loss: $4,792 (1970s), $8,381 (1980s), $13,988 (1990s), $19,187 (2000s), $28,084 (2010s), $77,944 (2020s). Single years: $15,180 in 2015 (1,180 claims), $76,699 in 2022 (39,736 claims) and $89,057 in 2024 (68,076 claims). Payouts have grown far faster than CPI-U.
+Median paid claim in constant 2025 dollars, by decade of loss:
 
-The data do not say why. Candidate explanations are the severity of recent storms (Ian, Helene, Milton), rebuilding costs rising faster than CPI-U, larger coverage limits, changes in how claims are handled, and changes in which buildings are insured. None is tested here. CPI-U was chosen because it is standard and public; a construction-cost index would give a different (probably smaller) drift, and that comparison is not made.
-
-## Is building age a stand-in for the loss year?
-
-Building age is the model's strongest feature, but old buildings appear mostly in recent claims: the median building age at loss (known construction dates) is 15 years in the 1980s, 38 in the 2010s and 50 in the 2020s. Recent claims are also larger, so age can pick up the calendar. `ablation_year_control.py` scores variants with the same folds as the headline model:
-
-| Variant | R² | Median % error | Fold R² |
+| Loss years | Claims | Median claim | Total paid |
 |---|---|---|---|
-| Current model (age, no year) | 0.200 | 73.9 | 0.31, 0.07, 0.16, −0.04, 0.14 |
-| Add loss year | 0.207 | 72.3 | 0.36, 0.09, 0.13, −0.05, 0.16 |
-| Remove building age | 0.146 | 76.6 | 0.15, 0.06, 0.09, 0.00, 0.04 |
-| Loss year, no building age | 0.210 | 72.0 | 0.24, 0.22, 0.12, −0.07, 0.17 |
-| Loss year and construction year, no age | 0.221 | 71.5 | 0.37, 0.10, 0.15, −0.06, 0.19 |
+| 1978-79 | 4,077 | $4,792 | $79.4M |
+| 1980-89 | 17,625 | $8,381 | $367.1M |
+| 1990-99 | 61,324 | $13,988 | $2,462.7M |
+| 2000-09 | 63,944 | $19,187 | $3,836.9M |
+| 2010-19 | 39,944 | $28,084 | $2,496.8M |
+| 2020-26 | 124,593 | $77,944 | $14,547.5M |
 
-Removing age costs 0.054 of R², so it carries signal. Replacing it with the loss year alone more than recovers that (0.210 vs 0.200), and adding the year on top of age barely moves the score. Most of what age contributes is therefore also available from the calendar year, and the two cannot be cleanly separated. Age should not be read as "older buildings cause larger payouts".
+By single year, the median was $15,180 in 2015 (1,180 claims), $76,699 in 2022 (39,736 claims) and $89,057 in 2024 (68,076 claims). The first decade covers two loss years, and the last covers seven. The 2020s median ($77,944) reflects a few very large seasons, which the table below separates:
 
-`ablation_postfirm.py` tests FEMA's post-FIRM flag, which is complete for every claim, as a cleaner stand-in:
-
-| Variant | R² | Median % error |
+| 2020-26 claims included | Claims | Median claim |
 |---|---|---|
-| Add post-FIRM flag (age kept) | 0.181 | 74.3 |
-| Post-FIRM flag instead of building age | 0.137 | 75.9 |
-| Loss year and post-FIRM flag (age kept) | 0.204 | 72.1 |
-| Loss year and post-FIRM flag, no building age | 0.222 | 71.3 |
+| All | 124,593 | $77,944 |
+| Without 2022 (Ian) | 84,857 | $78,506 |
+| Without 2024 (Helene, Milton) | 56,517 | $64,592 |
+| Without 2022 and 2024 | 16,781 | $45,693 |
+| Without Ian, Helene and Milton claims | 21,262 | $42,529 |
 
-The flag does not improve on age and is another coarse era marker (4.6% of claims from the 1970s are post-FIRM buildings, 45.0% of those from the 2010s). With the loss year in the model and age removed, it adds 0.012.
+The 2010s median is $28,084 (39,944 claims), so the 2020s median without the three largest storms is about 51% above it. Earlier decades shift the same way when their biggest years are set aside: the 1990s median is $13,988 and $18,880 without 1995 and 1999, and the 2000s median is $19,187 and $12,849 without 2004 and 2005.
 
-**How much these differences mean.** Ablation scores differ by a few hundredths, and individual folds move by 0.1 or more between models whose overall scores are within 0.01 of each other (up to 0.15). Fold 1 (ten mixed years) is the least stable. Across the three runs described under [Reproducibility](#reproducibility), the same "loss year and construction year" variant scored 0.211, 0.230 and 0.221, mostly from fold 1 (0.020, 0.132 and 0.103). Differences of about 0.02 or less between variants should not be treated as findings. The conclusion that holds in every run is that the loss year recovers all of age's signal.
+The ten named storms with the most claims:
 
-## Claim Estimator
+| Storm | Claims | Total paid | Median claim |
+|---|---|---|---|
+| Hurricane Helene (2024) | 49,037 | $6.60B | $106,695 |
+| Hurricane Ian (2022) | 38,111 | $5.29B | $80,157 |
+| Hurricane Irma (2017) | 18,544 | $1.29B | $30,822 |
+| Hurricane Milton (2024) | 16,183 | $1.21B | $46,251 |
+| Hurricane Irene (1999) | 13,680 | $0.23B | $6,277 |
+| Hurricane Ivan (2004) | 10,556 | $1.64B | $75,625 |
+| Hurricane Wilma (2005) | 9,434 | $0.58B | $28,521 |
+| Hurricane Opal (1995) | 9,022 | $0.81B | $32,076 |
+| Hurricane Elena (1985) | 7,438 | $0.23B | $16,441 |
+| Hurricane Josephine (1996) | 6,495 | $0.21B | $21,030 |
 
-The Claim Estimator tab uses a second LightGBM model with the loss year added to the 13 features (`train_year_model.py`; R² 0.207, median error 72%), so building age is not standing in for the era. The headline model, and the Model tab, keep the original features so that the headline stays conservative.
+CPI-U puts claims from different years on one price level. Payouts have grown much faster than that: the data show the growth, and possible reasons include storm severity, rebuilding costs rising faster than CPI-U, larger coverage limits, changes in claims handling and a different mix of insured buildings.
 
-- **Typical payout:** the model's prediction multiplied by 1.52, the exponential of the median out-of-fold error of this model.
-- **80% range:** the prediction multiplied by the exponential of the 10th and 90th percentiles of the same out-of-fold errors (−1.58 and +2.09 in log payout). It is an empirical error band pooled over all claims, so it has the same relative width for every scenario. It is probably too narrow for rare combinations of inputs and too wide for common ones. It is not a statistical prediction interval.
-- **Inputs not set by the user:** the county's average claim coordinates and median storm frequency; the building-age-missing flag is 0 and days to storm is 0.
-- **Interpretation:** the "what if the storm were stronger" control moves one input while the rest are held fixed. That shows a pattern in past claims, not the effect of changing a storm or a building. The year-aware model cannot extrapolate beyond the years in the data (1978 to 2026).
+## Risk factors
 
-## Limitations
+The Risk Factors tab compares payouts across 13 factors. Each shows a box for the middle 50% of claims with whiskers at the 10th and 90th percentiles, and a table of claims, share of claims, median, mean and middle 50%. Codes are labeled from the OpenFEMA data dictionary for `NfipClaims`.
 
-- **Modest signal.** R² 0.20 on log payout with a 74% median error on unseen years. The model is useful for seeing which factors matter, not for pricing a specific claim.
-- **Severity given payment only.** Claims closed without payment (about 30%) are excluded.
-- **Fragile folds.** 2024 is a fold on its own and carries 21.9% of the claims; fold scores range from −0.04 to 0.31.
-- **Does not extrapolate in time.** The 2020-2026 test is negative, and the model under-predicts unseen years by about 1.4 times. The Claim Estimator corrects the median but not the cause.
-- **Payout growth unexplained.** See [Payouts over time](#payouts-over-time).
-- **Storm assignment is a heuristic.** The nearest track point within 150 miles and 7 days is not necessarily the storm that flooded a given property; 22.2% of claims match no storm.
-- **Blurred locations.** About 7 miles.
-- **Within narrow filter slices** (one county, one storm category) R² is much lower than the headline; the dashboard shows it for the filtered slice.
-- **Coverage limits are not used,** although they cap payouts (about 4% of building payments sit at the limit).
-- **No simple baseline beyond the average.** The model is compared with predicting the training average, not with a table of median payouts by county and year.
-- **Pre-FIRM dates.** The 1492 placeholder is treated as unknown; whether that building is old is an inference from the pre-FIRM flag.
-- **Tests.** `tests/` holds about 40 tests on small hand-built examples (cleaning, the storm join and wind categories, inflation, year-grouped folds, the committed bundle and every dashboard callback). They do not cover page layout or the live deployment, and they do not judge model quality.
+| Factor | FEMA field | Groups |
+|---|---|---|
+| **Building age** | `originalConstructionDate and the loss year` | 0-10 yrs; 11-20; 21-30; 31-40; 41-50; 51-60; 60+ |
+| **Building coverage** | `totalBuildingInsuranceCoverage` | No building coverage; Up to $50k; $50k-$100k; $100k-$150k; $150k-$250k; $250k; Over $250k |
+| **Building deductible** | `buildingDeductibleCode` | $200; $500; $750; $1,000; $1,250; $1,500; $2,000; $3,000; $4,000; $5,000; $10,000; $15,000; $20,000; $25,000; $50,000; Not recorded |
+| **Building floors** | `numberOfFloorsInTheInsuredBuilding` | One floor; Two floors; Three or more floors; Split-level; Manufactured home or trailer on foundation; Townhouse, three or more floors; Not recorded |
+| **Built after first flood map** | `postFIRMConstructionIndicator` | Built before the first flood map; Built after the first flood map |
+| **Cause of flooding** | `causeOfDamage` | Accumulation of rainfall or snowmelt; Tidal water overflow; Stream, river or lake overflow; Alluvial fan overflow; Other causes; Other or not recorded |
+| **Elevated building** | `elevatedBuildingIndicator` | Not elevated; Elevated |
+| **Elevation vs base flood level** | `elevationDifference` | Below the base flood level; At the base flood level; 1 ft above; 2 ft above; 3 ft or more above; Not recorded |
+| **Flood water depth** | `waterDepth` | 0 in; 1-6 in; 7-12 in; 13-36 in; Over 36 in; Not recorded |
+| **Flood zone** | `ratedFloodZone` | X / B / C (moderate-minimal); A / AH / AO / AR / A99 (no base elevation, shallow, special); AE / A1-A30 (base elevation known); V / VE (velocity, coastal); D / unknown |
+| **Foundation type** | `foundationType` | Slab; Basement; Crawlspace; Elevated, no enclosure (post, pile or pier); Elevated with enclosure (post, pile or pier); Elevated with enclosure (not post, pile or pier); Not recorded |
+| **Occupancy type** | `occupancyType` | Single-family; 2-4 units; 5+ units; Mobile home; Condo association; Unit in multi-unit building; Non-residential; Unknown |
+| **Primary residence** | `primaryResidenceIndicator` | Primary residence; Not a primary residence |
+
+- **Flood zone.** Five groups follow FEMA's `ratedFloodZone` definitions: moderate-minimal (X, B, C), A-type zones without a base elevation (A, AH, AO, AR, A99), zones with a base elevation (AE, A1-A30), coastal high-velocity (V, VE), and D or unknown.
+- **Occupancy type.** FEMA's legacy codes (1-4, 6) and newer codes (11-19) describe the same kinds of buildings and are merged into eight groups.
+- **Building floors.** FEMA's field is a code: 1 one floor, 2 two floors, 3 three or more, 4 split-level, 5 manufactured home or trailer on a foundation, 6 townhouse with three or more floors.
+- **Foundation type.** Codes 1 to 6 are FEMA's six types. Code 0 is not in FEMA's list; it covers 95-100% of claims before 2010, so it is shown as Not recorded.
+- **Elevation vs base flood level.** Feet between the building's lowest floor, as used for rating, and the base flood elevation: below, at, or 1, 2 or 3 or more feet above.
+- **Building age.** Age at the time of loss, in bands of ten years, with the construction-date handling described above.
+- **Built after first flood map.** FEMA's post-FIRM indicator.
+- **Building coverage.** The policy's building limit. 39.9% of claims sit at exactly $250,000, the most common limit, and 2.6% have no building coverage, so each has a band of its own.
+- **Building deductible.** FEMA's deductible codes, shown as dollar amounts ($500 is code 0, $1,000 code 1, $5,000 code 5, and so on).
+- **Cause of flooding.** Codes 1 to 4 and 0 (tidal water overflow, stream, river or lake overflow, alluvial fan overflow, accumulation of rainfall or snowmelt, other causes). The other codes FEMA lists (erosion, earth movement, closed-basin lake, claim handling) and values outside its list are grouped as Other or not recorded.
+- **Flood water depth.** Inches, in bands. FEMA notes that some measurements were recorded in feet, and negative values count as Not recorded.
+
+**Fields recorded for part of the claims.** The share of claims in the Not recorded group varies by decade:
+
+| Field | Overall | 1978-79 | 1980-89 | 1990-99 | 2000-09 | 2010-19 | 2020-26 |
+|---|---|---|---|---|---|---|---|
+| Foundation type | 54.8% | 100% | 100% | 99% | 95% | 61% | 3% |
+| Elevation vs base flood level | 60.9% | 85% | 91% | 62% | 51% | 54% | 63% |
+| Flood water depth | 8.0% | 11% | 4% | 9% | 7% | 11% | 7% |
+| Building deductible | 4.2% | 95% | 25% | 0% | 1% | 1% | 3% |
+
+The Loss Years filter narrows any of these to the years where the field is filled in; for example, foundation type is recorded for 97% of 2020-26 claims.
+
+**Building age and loss year.** The median building age at loss (buildings with known dates) was 15 years in the 1980s, 22 in the 1990s, 28 in the 2000s, 38 in the 2010s and 50 in the 2020s, and payouts rose over the same period. The Building age view therefore also draws one line per decade of loss, so a building's age is compared with others of the same era. The first-flood-map factor overlaps with building age for the same reason.
+
+**Small groups.** A claim count under 30 carries an asterisk in every table and in the year chart's hover text. The charts draw groups with 30 or more claims, and the by-decade building-age lines use points with 30 or more claims.
+
+## Reading the numbers
+
+- **Paid claims.** The figures describe the cost of a claim once it was paid.
+- **Locations.** Coordinates are blurred to about 7 miles, and the county field is the reliable location.
+- **Associations.** The dashboard describes patterns in past claims. Several factors move together (building age, the first-flood-map indicator and loss year; coverage and building value), so a gap between two groups can reflect a third characteristic.
+- **Payout growth.** The growth beyond inflation has several possible reasons (see Payouts over time).
+- **Event labels.** Storm names are FEMA's own labels, uneven from year to year, so totals for older events cover their labeled claims.
+- **Fields recorded for part of the claims.** Foundation type, elevation, deductible and water depth are filled in for different shares of each decade (see Risk factors).
 
 ## Reproducibility
 
-Run order (details in the README): `fetch_data.py`, `build_dataset.py`, `train_model.py`, `train_year_model.py`, the three `ablation_*.py` scripts, then `build_deploy_data.py`. Training is seeded, and the results above are what that sequence produced from the 2026-10-20 pull. Rerunning the pipeline on Python 3.14 with pandas 3.0.6, NumPy 2.5.4, scikit-learn 1.9.1 and LightGBM 4.7.0 gave the same cleaned dataset and the same predictions, and metrics within 1e-13, as it had on the previous pinned versions (pandas 2.0.3, NumPy 1.24.3, scikit-learn 1.3.0, LightGBM 4.6.0).
+Run order (details in the README): `fetch_data.py`, `build_dataset.py`, `build_deploy_data.py`. The pipeline is deterministic: the same pull gives the same cleaned dataset and the same `deploy_data/`.
 
-**Data version.** The raw pull is not in the repository (about 14 MB). A new pull returns FEMA's current data, which may differ from the pull used here. The SHA-256 of the cached v3 pull, `data/raw/fema_nfip_claims_v3_fl.csv.gz`, is `7201a19294bfb37dd5abdb9085ef27acede67a43a6b0accab43851e95809f6fa`.
+**Data version.** The raw pull (about 16 MB) is kept outside the repository, and a new pull returns FEMA's current data. The SHA-256 of the cached pull behind these numbers, `data/raw/fema_nfip_claims_v3_fl.csv.gz` (pulled 2026-11-03), is `e0a913f3bc8d0ae41e59a34122c2701d2897312dd43bdfbccb7bd0dd4e941bc8`. The earlier 2026-10-20 pull, whose 23 fields all agree with it, is not the source of record.
 
-**Sensitivity to the data version and to the storm categories.** The pipeline was first run on a pull of v2 of the same dataset (448,425 Florida rows, frozen 2026-06-01). Compared with v3, v2 had 193 fewer rows (mostly recent losses), the same placeholder dates, and slightly different values in about 0.3% of building payments and 0.1% of contents payments (the largest change is about +$38 million in 2024 payments). The first two columns below also used wind-speed thresholds in miles per hour on a field in knots, which put storm categories about one step too low (Andrew, 145 kt, was "Category 4" and no claim was "Category 5"); the third column uses the knot thresholds in `constants.py` and is the version the rest of this document describes. The correction changed the category of 78% of the storm-matched claims.
+**Software.** Python 3.14 with pandas 3.0.6, NumPy 2.5.4, PyArrow 26.0.0, Requests 2.34.2, Plotly 7.1.0 and Dash 4.4.1; CI runs the tests on Python 3.13 and 3.14. The cleaned dataset is identical on the earlier pinned versions (pandas 2.0.3, NumPy 1.24.3) and on these.
 
-| | v2 pull, mph thresholds | v3 pull, mph thresholds | v3 pull, knot thresholds |
-|---|---|---|---|
-| Paid claims | 311,400 | 311,507 | 311,507 |
-| Headline R² | 0.204 | 0.199 | **0.200** |
-| Fold R² | 0.32, 0.06, 0.16, −0.04, 0.16 | 0.30, 0.06, 0.15, −0.03, 0.15 | 0.31, 0.07, 0.16, −0.04, 0.14 |
-| Train through 2019, test 2020+ | −0.271 | −0.233 | −0.239 |
-| Claim Estimator model R² | 0.211 | 0.208 | 0.207 |
-| Claim Estimator under-prediction factor | 1.53x | 1.50x | 1.52x |
-| Loss year and construction year variant | 0.211 | 0.230 | 0.221 |
-
-The category is one of 13 inputs and repeats the wind speed, which the model also has, so the correction changed the scores very little; it changes what the dashboard's storm categories mean.
-
-v3 also fills in `nfipCommunityName`, which was blank for 51% of v2 rows; the pipeline does not use it as a feature. The claim `id` changed from a UUID to an integer.
+**Tests.** `tests/` holds about 70 tests on small hand-built examples and on the committed bundle: the exclusion counts and payout sum, the inflation adjustment, the event labels, the grouping of every risk factor, the consistency of `deploy_data/`, and every dashboard callback, including empty filters.
 
 ## Deployment notes
 
-The hosted dashboard runs on Render's Starter plan (512 MB of RAM, kept awake). The service installs `requirements-render.txt` and serves `wsgi.py` with gunicorn (one worker, four threads); `render.yaml` records these settings, but Render's dashboard controls the live service and takes precedence over the file. The app holds all 311,507 paid claims as one compact table (about 4 MB on disk) and uses roughly 190 MB at startup and about 250 MB in use; every aggregate that can be precomputed is stored in `deploy_data/` by `build_deploy_data.py`.
+The hosted dashboard runs on Render's Starter plan (512 MB of RAM, kept awake). The service installs `requirements-render.txt` and serves `wsgi.py` with gunicorn 26.2.0 (one worker, four threads); `render.yaml` records these settings, and Render's dashboard controls the live service, with its settings taking precedence over the file.
 
-`wsgi.py` answers `/healthz` immediately and imports the dashboard in a background thread started on the first request in each worker process. Starting the thread at import time does not work under gunicorn: the master process imports the module and then forks the worker, so the thread exists only in the master and the worker never finishes loading (forking while a thread is mid-import could also deadlock the worker; that possibility was not tested). `/debugz` reports whether the app has loaded, its memory use and any startup error.
+The app holds all 311,507 paid claims as one compact table (4.0 MB on disk) and filters it live; the headline numbers are precomputed in `summary.json`. On the development machine (Windows) the process uses about 185 MB after loading the app and about 211 MB after every tab and factor has been opened; `/debugz` reports the hosted figure.
+
+`wsgi.py` answers `/healthz` immediately and imports the dashboard in a background thread started on the first request in each worker process (a thread started when the module is imported exists only in gunicorn's master process, so the worker would never finish loading). `/debugz` reports whether the app has loaded, its memory use and any startup error.

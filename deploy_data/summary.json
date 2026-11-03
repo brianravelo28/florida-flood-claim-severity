@@ -1,0 +1,397 @@
+{
+  "n_claims": 311507,
+  "total_paid": 23790442854.02356,
+  "median_claim": 29522.2109375,
+  "year_min": 1978,
+  "year_max": 2026,
+  "by_decade": {
+    "1970": {
+      "label": "1978-79",
+      "claims": 4077,
+      "median": 4792.259765625,
+      "total_paid": 79368504.28155899
+    },
+    "1980": {
+      "label": "1980-89",
+      "claims": 17625,
+      "median": 8381.400390625,
+      "total_paid": 367108419.26377434
+    },
+    "1990": {
+      "label": "1990-99",
+      "claims": 61324,
+      "median": 13987.56494140625,
+      "total_paid": 2462735502.542373
+    },
+    "2000": {
+      "label": "2000-09",
+      "claims": 63944,
+      "median": 19186.6298828125,
+      "total_paid": 3836858963.208196
+    },
+    "2010": {
+      "label": "2010-19",
+      "claims": 39944,
+      "median": 28084.5,
+      "total_paid": 2496842554.058779
+    },
+    "2020": {
+      "label": "2020-26",
+      "claims": 124593,
+      "median": 77943.7265625,
+      "total_paid": 14547528910.668877
+    }
+  },
+  "by_year": {
+    "1978": {
+      "claims": 255,
+      "median": 5275.1201171875
+    },
+    "1979": {
+      "claims": 3822,
+      "median": 4729.81005859375
+    },
+    "1980": {
+      "claims": 378,
+      "median": 3737.969970703125
+    },
+    "1981": {
+      "claims": 1260,
+      "median": 2215.554931640625
+    },
+    "1982": {
+      "claims": 3747,
+      "median": 5050.02001953125
+    },
+    "1983": {
+      "claims": 368,
+      "median": 4911.9150390625
+    },
+    "1984": {
+      "claims": 623,
+      "median": 6915.68017578125
+    },
+    "1985": {
+      "claims": 8486,
+      "median": 15456.40478515625
+    },
+    "1986": {
+      "claims": 369,
+      "median": 6646.10009765625
+    },
+    "1987": {
+      "claims": 314,
+      "median": 4775.409912109375
+    },
+    "1988": {
+      "claims": 1899,
+      "median": 6220.759765625
+    },
+    "1989": {
+      "claims": 181,
+      "median": 10799.5703125
+    },
+    "1990": {
+      "claims": 131,
+      "median": 13707.5
+    },
+    "1991": {
+      "claims": 1345,
+      "median": 6624.14990234375
+    },
+    "1992": {
+      "claims": 4932,
+      "median": 32479.4951171875
+    },
+    "1993": {
+      "claims": 8787,
+      "median": 38987.1015625
+    },
+    "1994": {
+      "claims": 2100,
+      "median": 7613.090087890625
+    },
+    "1995": {
+      "claims": 12210,
+      "median": 22087.83984375
+    },
+    "1996": {
+      "claims": 6799,
+      "median": 20287.44921875
+    },
+    "1997": {
+      "claims": 1480,
+      "median": 6037.64013671875
+    },
+    "1998": {
+      "claims": 7905,
+      "median": 10922.6396484375
+    },
+    "1999": {
+      "claims": 15635,
+      "median": 6477.68994140625
+    },
+    "2000": {
+      "claims": 10156,
+      "median": 13418.544921875
+    },
+    "2001": {
+      "claims": 3330,
+      "median": 11470.6201171875
+    },
+    "2002": {
+      "claims": 758,
+      "median": 7165.35498046875
+    },
+    "2003": {
+      "claims": 1125,
+      "median": 8536.0
+    },
+    "2004": {
+      "claims": 22225,
+      "median": 30389.8203125
+    },
+    "2005": {
+      "claims": 20129,
+      "median": 20399.359375
+    },
+    "2006": {
+      "claims": 527,
+      "median": 14488.9501953125
+    },
+    "2007": {
+      "claims": 438,
+      "median": 12978.5849609375
+    },
+    "2008": {
+      "claims": 2834,
+      "median": 12189.1103515625
+    },
+    "2009": {
+      "claims": 2422,
+      "median": 18947.3798828125
+    },
+    "2010": {
+      "claims": 272,
+      "median": 9671.03515625
+    },
+    "2011": {
+      "claims": 1206,
+      "median": 14247.4599609375
+    },
+    "2012": {
+      "claims": 3144,
+      "median": 13327.76025390625
+    },
+    "2013": {
+      "claims": 1251,
+      "median": 19555.640625
+    },
+    "2014": {
+      "claims": 2768,
+      "median": 36198.814453125
+    },
+    "2015": {
+      "claims": 1180,
+      "median": 15180.16015625
+    },
+    "2016": {
+      "claims": 6303,
+      "median": 35650.328125
+    },
+    "2017": {
+      "claims": 19886,
+      "median": 30472.935546875
+    },
+    "2018": {
+      "claims": 3321,
+      "median": 43264.5390625
+    },
+    "2019": {
+      "claims": 613,
+      "median": 22871.7890625
+    },
+    "2020": {
+      "claims": 7441,
+      "median": 25089.150390625
+    },
+    "2021": {
+      "claims": 449,
+      "median": 20880.060546875
+    },
+    "2022": {
+      "claims": 39736,
+      "median": 76698.6953125
+    },
+    "2023": {
+      "claims": 8545,
+      "median": 67174.453125
+    },
+    "2024": {
+      "claims": 68076,
+      "median": 89056.9296875
+    },
+    "2025": {
+      "claims": 317,
+      "median": 34438.51953125
+    },
+    "2026": {
+      "claims": 29,
+      "median": 25143.83984375
+    }
+  },
+  "sensitivity_2020s": {
+    "all": {
+      "claims": 124593,
+      "median": 77943.7265625
+    },
+    "without_2022": {
+      "claims": 84857,
+      "median": 78506.0625
+    },
+    "without_2024": {
+      "claims": 56517,
+      "median": 64592.1484375
+    },
+    "without_2022_and_2024": {
+      "claims": 16781,
+      "median": 45693.21875
+    },
+    "without_ian_helene_milton": {
+      "claims": 21262,
+      "median": 42529.439453125
+    }
+  },
+  "median_2010s": {
+    "claims": 39944,
+    "median": 28084.5
+  },
+  "without_big3_vs_2010s_ratio": 1.5143384946545246,
+  "event_groups": {
+    "Named storm": {
+      "claims": 236318,
+      "pct_claims": 75.9,
+      "paid": 21188283818.172783,
+      "pct_paid": 89.1,
+      "median": 40002.326171875
+    },
+    "Other FEMA-labeled event": {
+      "claims": 38792,
+      "pct_claims": 12.5,
+      "paid": 1489438086.970295,
+      "pct_paid": 6.3,
+      "median": 16309.94482421875
+    },
+    "No event label": {
+      "claims": 36397,
+      "pct_claims": 11.7,
+      "paid": 1112720948.8804827,
+      "pct_paid": 4.7,
+      "median": 11127.5595703125
+    }
+  },
+  "event_label_pct": 88.3,
+  "named_storm_label_pct": 75.9,
+  "named_storm_pct_by_decade": {
+    "1970": 0.0,
+    "1980": 44.8,
+    "1990": 62.7,
+    "2000": 67.3,
+    "2010": 75.2,
+    "2020": 93.9
+  },
+  "years_without_a_named_storm_claim": 26,
+  "named_storms": {
+    "count": 45,
+    "under_min_claims": 3
+  },
+  "top_named_storms_by_claims": [
+    {
+      "event": "Hurricane Helene",
+      "year": 2024,
+      "claims": 49037,
+      "total_paid": 6600471486.300517,
+      "median": 106695.34375
+    },
+    {
+      "event": "Hurricane Ian",
+      "year": 2022,
+      "claims": 38111,
+      "total_paid": 5293042961.732334,
+      "median": 80156.7265625
+    },
+    {
+      "event": "Hurricane Irma",
+      "year": 2017,
+      "claims": 18544,
+      "total_paid": 1288492810.5534291,
+      "median": 30822.4296875
+    },
+    {
+      "event": "Hurricane Milton",
+      "year": 2024,
+      "claims": 16183,
+      "total_paid": 1214967029.8028579,
+      "median": 46251.0703125
+    },
+    {
+      "event": "Hurricane Irene",
+      "year": 1999,
+      "claims": 13680,
+      "total_paid": 225995433.30667305,
+      "median": 6276.6650390625
+    },
+    {
+      "event": "Hurricane Ivan",
+      "year": 2004,
+      "claims": 10556,
+      "total_paid": 1640865067.2865562,
+      "median": 75624.74609375
+    },
+    {
+      "event": "Hurricane Wilma",
+      "year": 2005,
+      "claims": 9434,
+      "total_paid": 579550475.3662338,
+      "median": 28521.4951171875
+    },
+    {
+      "event": "Hurricane Opal",
+      "year": 1995,
+      "claims": 9022,
+      "total_paid": 813065109.994194,
+      "median": 32076.0947265625
+    },
+    {
+      "event": "Hurricane Elena",
+      "year": 1985,
+      "claims": 7438,
+      "total_paid": 227098930.22947407,
+      "median": 16441.3349609375
+    },
+    {
+      "event": "Hurricane Josephine",
+      "year": 1996,
+      "claims": 6495,
+      "total_paid": 208357202.3650866,
+      "median": 21030.349609375
+    }
+  ],
+  "top_10_named_storms": {
+    "pct_claims": 57.3,
+    "pct_paid": 76.0
+  },
+  "top_25_named_storms": {
+    "pct_claims": 74.1,
+    "pct_paid": 88.1
+  },
+  "median_building_age_at_loss_by_decade": {
+    "1970": 2.0,
+    "1980": 15.0,
+    "1990": 22.0,
+    "2000": 28.0,
+    "2010": 38.0,
+    "2020": 50.0
+  },
+  "duplicates_kept": 996
+}

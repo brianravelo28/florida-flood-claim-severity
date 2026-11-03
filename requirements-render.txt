@@ -1,9 +1,8 @@
-# Runtime dependencies for the hosted dashboard (no training stack). Versions match the local
+# Runtime dependencies for the hosted dashboard. Versions match the local
 # environment the app was tested in.
 pandas==3.0.6
 numpy==2.5.4
 pyarrow==26.0.0
-lightgbm==4.7.0
 plotly==7.1.0
 dash==4.4.1
 gunicorn==26.2.0

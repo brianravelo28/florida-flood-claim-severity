@@ -1,27 +1,19 @@
-"""Build the analysis dataset from real OpenFEMA NFIP claims and NOAA HURDAT2 storm tracks."""
+"""Build the analysis dataset from real OpenFEMA NFIP claims: clean, adjust for inflation, group and label events."""
 import json
-import re
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.neighbors import BallTree
 
-from constants import WIND_BREAKS_KT
-from fetch_data import fetch_cpi, fetch_fema, fetch_hurdat2
+from constants import (CAUSE_LABELS, COVERAGE_BINS, COVERAGE_LABELS, DEDUCTIBLE_LABELS, DEPTH_BINS, DEPTH_LABELS, ELEVATION_LABELS,
+                       EVENT_MERGES, EVENT_NEEDS_YEAR, FIRM_LABELS, FLOOR_LABELS, FOUNDATION_LABELS, NAMED_STORM_PATTERN,
+                       PRIMARY_LABELS)
+from fetch_data import fetch_cpi, fetch_fema
 
 ROOT = Path(__file__).parent
 OUT_CSV = ROOT / "data" / "insurance_clean.csv.gz"
 OUT_REPORT = ROOT / "data" / "build_report.json"
 
-EARTH_MI = 3959.0
-# Tuned against FEMA's own floodEvent storm labels: 50 mi / +/-30 d gave 67% correct
-# storms and reached only ~half of named-storm claims; 150 mi / +/-7 d gives ~99.8% correct and ~96% reach.
-RADIUS_MI = 150.0
-WINDOW_H = 7 * 24
-FREQ_RADIUS_MI = 50.0
-FREQ_YEARS = 40
-TRACK_START_YEAR = 1978 - FREQ_YEARS
 # Florida incl. the panhandle (a 30.5N / -87.5W box would cut off Pensacola and the northern border)
 FL_LAT, FL_LON = (24.3, 31.1), (-87.7, -79.8)
 
@@ -41,9 +33,6 @@ FL_COUNTIES = {
     12121: "Suwannee", 12123: "Taylor", 12125: "Union", 12127: "Volusia", 12129: "Wakulla",
     12131: "Walton", 12133: "Washington",
 }
-
-CATEGORY_LABELS = {-1: "No storm", 0: "Tropical Depression", 1: "Tropical Storm",
-                   2: "Category 1", 3: "Category 2", 4: "Category 3", 5: "Category 4", 6: "Category 5"}
 
 CPI_BASE_YEAR = 2025
 
@@ -71,53 +60,6 @@ report = {}
 
 def log(msg):
     print(msg, flush=True)
-
-
-# ---------------------------------------------------------------- HURDAT2
-_HEADER = re.compile(r"^[A-Z]{2}\d{6}$")
-
-
-def parse_hurdat2(text):
-    recs, cur, repaired, skipped = [], None, 0, 0
-    for line in text.splitlines():
-        fixed = re.sub(r"([NS])\s+(\d)", r"\1,\2", line)  # a few records are missing the lat/lon comma
-        repaired += fixed != line
-        p = [x.strip() for x in fixed.split(",")]
-        if _HEADER.match(p[0]):
-            cur = (p[0], p[1].title(), int(p[0][4:8]))
-        elif cur is not None and len(p) >= 8:
-            if p[4][-1:] not in ("N", "S") or p[5][-1:] not in ("E", "W"):  # e.g. "38.83" with no hemisphere letter
-                skipped += 1
-                continue
-            lat =float(p[4][:-1]) * (1 if p[4][-1] == "N" else -1)
-            lon = float(p[5][:-1]) * (-1 if p[5][-1] == "W" else 1)
-            recs.append((cur[0], cur[1], cur[2], p[0] + p[1], lat, lon, int(p[6]), int(p[7])))
-    log(f"HURDAT2: repaired {repaired} and skipped {skipped} malformed track line(s)")
-    df = pd.DataFrame(recs, columns=["storm_id", "storm_name", "storm_year", "stamp", "lat", "lon", "wind", "pressure"])
-    df["time"] = pd.to_datetime(df["stamp"], format="%Y%m%d%H%M")
-    df["wind"] = df["wind"].where(df["wind"] >= 0)
-    df["pressure"] = df["pressure"].where(df["pressure"] > 0)
-    return df.drop(columns="stamp")
-
-
-def interpolate_tracks(df):
-    """Linearly interpolate each storm to hourly positions so 6-hourly gaps (~100 mi) don't hide near-misses."""
-    epoch = pd.Timestamp("1970-01-01")
-    parts = []
-    for sid, g in df.groupby("storm_id", sort=False):
-        g = g.sort_values("time")
-        h = ((g["time"] - epoch).dt.total_seconds() / 3600).to_numpy()
-        grid = np.arange(np.ceil(h[0]), np.floor(h[-1]) + 1)
-        if len(grid) == 0:
-            continue
-        ok = g["wind"].notna().to_numpy()
-        wind = np.interp(grid, h[ok], g["wind"].to_numpy()[ok]) if ok.any() else np.full(len(grid), np.nan)
-        parts.append(pd.DataFrame({
-            "storm_id": sid, "storm_name": g["storm_name"].iloc[0], "storm_year": g["storm_year"].iloc[0],
-            "hour": grid, "lat": np.interp(grid, h, g["lat"].to_numpy()),
-            "lon": np.interp(grid, h, g["lon"].to_numpy()), "wind": wind,
-        }))
-    return pd.concat(parts, ignore_index=True)
 
 
 # ---------------------------------------------------------------- claims
@@ -153,86 +95,24 @@ def prepare_claims(raw):
         log(f"  dropped {v:>8,}  {k}")
     report["rows_dropped"] = steps
     log(f"Claims after cleaning: {len(c):,}")
+
+    # Rows identical to an earlier row on every field except id. They are kept: they cluster in multi-unit buildings and
+    # condo associations, where several units of one building file claims with the same values, and the data have no
+    # building or policy identifier to tell a repeat from a neighbour.
+    fields = [col for col in raw.columns if col != "id"]
+    report["rows_identical_to_an_earlier_row_except_id"] = int(c.duplicated(subset=fields).sum())
     return c.reset_index(drop=True)
 
 
-# ---------------------------------------------------------------- spatial-temporal join
-def join_storms(claims, tracks):
-    pts = tracks[tracks["lat"].between(21.5, 34.0) & tracks["lon"].between(-91.0, -76.5)].reset_index(drop=True)
-    log(f"Hourly track points near Florida: {len(pts):,} from {pts['storm_id'].nunique()} storms")
-    report["track_points"] = len(pts)
-    tree = BallTree(np.radians(pts[["lat", "lon"]].to_numpy()), metric="haversine")
-
-    claims["loc_id"] = claims.groupby(["latitude", "longitude"]).ngroup()
-    locs = claims.drop_duplicates("loc_id").sort_values("loc_id")[["latitude", "longitude"]].to_numpy()
-    log(f"Unique claim locations: {len(locs):,}")
-    ind, dist = tree.query_radius(np.radians(locs), r=RADIUS_MI / EARTH_MI, return_distance=True)
-
-    t_h = pts["hour"].to_numpy()
-    sid = pts["storm_id"].astype("category").cat.codes.to_numpy()
-    syear = pts["storm_year"].to_numpy()
-    claim_h = ((claims["dateOfLoss"] - pd.Timestamp("1970-01-01")).dt.total_seconds() / 3600).to_numpy()
-    claim_year = claims["yearOfLoss"].to_numpy()
-
-    match_idx = np.full(len(claims), -1, dtype=np.int64)
-    match_dist = np.full(len(claims), np.nan)
-    freq = np.zeros(len(claims), dtype=np.int64)
-
-    for loc, rows in claims.groupby("loc_id").indices.items():
-        ii = ind[loc]
-        if len(ii) == 0:
-            continue
-        o = np.argsort(t_h[ii])
-        ii, dd = ii[o], dist[loc][o] * EARTH_MI
-        tt = t_h[ii]
-
-        uh, inv = np.unique(claim_h[rows], return_inverse=True)
-        lo = np.searchsorted(tt, uh - WINDOW_H, "left")
-        hi = np.searchsorted(tt, uh + WINDOW_H, "right")
-        best = np.full(len(uh), -1, dtype=np.int64)
-        bestd = np.full(len(uh), np.nan)
-        for k in range(len(uh)):
-            if hi[k] > lo[k]:
-                j = lo[k] + dd[lo[k]:hi[k]].argmin()
-                best[k], bestd[k] = ii[j], dd[j]
-        match_idx[rows] = best[inv]
-        match_dist[rows] = bestd[inv]
-
-        near = dd <= FREQ_RADIUS_MI
-        _, first = np.unique(sid[ii][near], return_index=True)
-        years = np.sort(syear[ii][near][first])
-        y = claim_year[rows]
-        freq[rows] = np.searchsorted(years, y, "left") - np.searchsorted(years, y - FREQ_YEARS, "left")
-
-    hit = match_idx >= 0
-    claims["distance_from_track_mi"] = match_dist
-    claims["storm_id"] = np.where(hit, pts["storm_id"].to_numpy()[match_idx], None)
-    claims["nearest_storm_name"] = np.where(hit, pts["storm_name"].to_numpy()[match_idx], None)
-    claims["storm_wind_speed_kt"] = np.where(hit, pts["wind"].to_numpy()[match_idx], np.nan)
-    claims["days_to_storm"] = np.where(hit, np.round((t_h[match_idx] - claim_h) / 24), np.nan)
-    claims["historical_storm_freq"] = freq
-    log(f"Claims matched to a storm (<= {RADIUS_MI:.0f} mi, +/-{WINDOW_H // 24} days): {hit.sum():,} ({100 * hit.mean():.1f}%)")
-    report["storm_matched_pct"] = round(100 * hit.mean(), 2)
-    return claims.drop(columns="loc_id")
-
-
 # ---------------------------------------------------------------- features
-def wind_to_category(w):
-    w = np.asarray(w, dtype=float)
-    return np.select([np.isnan(w)] + [w < b for b in WIND_BREAKS_KT], [-1, 0, 1, 2, 3, 4, 5], default=6).astype(int)
-
-
 def display_building_age(c, min_n=30):
-    """Building age for DISPLAY/aggregation only (e.g. the Risk factors 'Building age' chart) -- NOT a model feature.
+    """Building age in years, with a year-aware value for buildings that have no usable construction date.
 
-    Rows with no usable construction date (building_age_missing==1: 11,466 are FEMA's 1492 sentinel, all flagged
-    pre-FIRM, plus 253 other bad dates) get the median age of known-date pre-FIRM
-    claims from the SAME loss year, instead of the flat overall median: "pre-FIRM" is not a fixed age (it ages from
-    ~9 years old in the 1970s to ~55 by the 2020s as the same construction era gets older), and 92% of these rows are
-    themselves 1970s-80s losses. Tested in ablation_placeholder_age.py: this makes no difference to the model (R2
-    0.200 vs 0.201, within fold-to-fold noise), so the model keeps the flat-median building_age_years column; this
-    display-only version just avoids lumping ~11,700 claims from every era into one misleading age bucket. (It also
-    applies the pre-FIRM age to the 253 non-sentinel rows, 0.08% of claims, some of which are really new buildings.)
+    Rows with no usable construction date (building_age_missing == 1) get the median age of known-date pre-FIRM claims
+    from the SAME loss year: FEMA's placeholder date marks buildings that are all flagged pre-FIRM (built before the
+    community's flood map), and "pre-FIRM" is not a fixed age (the median pre-FIRM building was about 9 years old at
+    loss in the 1970s and about 54 in the 2020s, as the same construction era gets older). Loss years with fewer than
+    `min_n` known-date pre-FIRM claims borrow from the surrounding +/-2 years, then from all pre-FIRM claims.
     """
     known_prefirm = c[(c["building_age_missing"] == 0) & (c["post_firm"] == 0)]
     by_year = known_prefirm.groupby("yearOfLoss")["building_age_years"].agg(["median", "size"])
@@ -247,8 +127,8 @@ def display_building_age(c, min_n=30):
     year_value = {yr: lookup(yr) for yr in c["yearOfLoss"].unique()}
     age = c["building_age_years"].copy()
     ph = c["building_age_missing"] == 1
-    age[ph] = c.loc[ph, "yearOfLoss"].map(year_value).round().astype(int)
-    return age
+    age[ph] = c.loc[ph, "yearOfLoss"].map(year_value).round()
+    return age.astype(int)
 
 
 def encode_flood_zone(z):
@@ -267,34 +147,65 @@ def encode_flood_zone(z):
     return enc, label
 
 
+def _code(series):
+    """A coded field as clean text ('1', 'A'): numeric codes can arrive as 1, 1.0 or '1' depending on the column's other values."""
+    return series.astype("string").str.strip().str.replace(r"\.0$", "", regex=True)
+
+
+def label_risk_factors(c):
+    """Readable groups for the fields behind the Risk Factors tab, using FEMA's own code definitions."""
+    c["cause_group"] = _code(c["causeOfDamage"]).map(CAUSE_LABELS).fillna("Other or not recorded")
+    depth = pd.to_numeric(c["waterDepth"], errors="coerce")
+    c["depth_band"] = pd.cut(depth.where(depth >= 0), DEPTH_BINS, labels=DEPTH_LABELS).astype("string").fillna("Not recorded")
+    elev = pd.to_numeric(c["elevationDifference"], errors="coerce")
+    c["elevation_band"] = np.select([elev.isna(), elev < 0, elev == 0, elev == 1, elev == 2],
+                                    ["Not recorded"] + ELEVATION_LABELS[:4], default=ELEVATION_LABELS[4])
+    c["deductible_group"] = _code(c["buildingDeductibleCode"]).map(DEDUCTIBLE_LABELS).fillna("Not recorded")
+    c["foundation_group"] = _code(c["foundationType"]).map(FOUNDATION_LABELS).fillna("Not recorded")
+    return c
+
+
+def label_events(c):
+    """FEMA's own event label (floodEvent), tidied: Georges is one storm that FEMA split by region, and Alberto is two
+    different storms (1994 and 2006) with one name, so it gets its year. Every other label is kept as FEMA wrote it."""
+    event = c["floodEvent"].astype("string").str.strip()
+    event = event.where(event != "", pd.NA).replace(EVENT_MERGES)
+    with_year = event + " (" + c["yearOfLoss"].astype(str) + ")"
+    event = event.where(~event.isin(EVENT_NEEDS_YEAR), with_year)
+    named = event.str.contains(NAMED_STORM_PATTERN, case=False, na=False)
+    c["event"] = event
+    c["event_group"] = np.where(event.isna(), "No event label", np.where(named, "Named storm", "Other FEMA-labeled event"))
+    report["event_label_pct"] = round(100 * float(event.notna().mean()), 1)
+    report["named_storm_label_pct"] = round(100 * float(named.mean()), 1)
+    return c
+
+
 def engineer_features(c):
     yr = pd.to_numeric(c["originalConstructionDate"].str[:4], errors="coerce")  # pandas dates overflow before 1677
     bad = ~((yr >= 1800) & (yr <= c["yearOfLoss"]))
     report["construction_year_unknown_pct"] = round(100 * bad.mean(), 2)
+    report["construction_year_unusable"] = int(bad.sum())
+    report["construction_date_placeholder_1492"] = int(c["originalConstructionDate"].astype(str).str.startswith("1492").sum())
     yr = yr.where(~bad)
     c["yearOfConstruction"] = yr
-    age = (c["yearOfLoss"] - yr).clip(0, 200)
-    c["building_age_missing"] = age.isna().astype(int)
-    c["building_age_years"] = age.fillna(age.median()).astype(int)
+    c["building_age_missing"] = bad.astype(int)
+    c["building_age_years"] = (c["yearOfLoss"] - yr).clip(0, 200)  # NaN where the construction date is unusable
 
     c["is_elevated"] = c["elevatedBuildingIndicator"].astype(str).str.lower().eq("true").astype(int)
     # Construction started after the community's initial FIRM (or after 1974-12-31, whichever is later). Complete for
     # every claim, unlike the construction date.
     c["post_firm"] = c["postFIRMConstructionIndicator"].astype(str).str.lower().eq("true").astype(int)
     c["building_age_display_years"] = display_building_age(c)
+    c["firm_group"] = np.where(c["post_firm"] == 1, FIRM_LABELS[1], FIRM_LABELS[0])
+    c["floors_group"] = c["numberOfFloorsInTheInsuredBuilding"].map(FLOOR_LABELS).fillna("Not recorded")
+    c["primary_residence"] = np.where(c["primaryResidenceIndicator"].astype(str).str.lower().eq("true"), PRIMARY_LABELS[0], PRIMARY_LABELS[1])
+    c["coverage_band"] = pd.cut(c["totalBuildingInsuranceCoverage"], COVERAGE_BINS, labels=COVERAGE_LABELS).astype(str)
     c["flood_zone_encoded"], c["flood_zone_group"] = encode_flood_zone(c["ratedFloodZone"])
     c["occupancy_encoded"] = c["occupancyType"].fillna(0).astype(int)
     c["occupancy_label"] = c["occupancy_encoded"].map(OCCUPANCY_LABELS)
     c["occupancy_group"] = c["occupancy_encoded"].map(OCCUPANCY_TO_GROUP)
-    c["occupancy_group_encoded"] = c["occupancy_group"].map(OCCUPANCY_GROUP_CODE)
-
-    d = c["distance_from_track_mi"]
-    c["distance_bin"] = np.select([d.isna(), d <= 25, d <= 50, d <= 100], [-1, 4, 3, 2], default=1)
-    c["storm_category_encoded"] = wind_to_category(c["storm_wind_speed_kt"])
-    c["storm_category"] = c["storm_category_encoded"].map(CATEGORY_LABELS)
-    c["log_amountpaid"] = np.log1p(c["amountPaid"])
     c["countyName"] = c["countyCode"].astype("Int64").map(FL_COUNTIES).fillna("Unknown")
-    return c
+    return label_events(label_risk_factors(c))
 
 
 def add_real_dollars(c):
@@ -312,7 +223,6 @@ def add_real_dollars(c):
     assert at_loss.notna().all(), "CPI missing for some loss months"
     c["cpi_factor"] = base_rows.mean() / at_loss
     c["amountPaid_real"] = c["amountPaid"] * c["cpi_factor"]
-    c["log_amountpaid_real"] = np.log1p(c["amountPaid_real"])
     report["cpi_base"] = f"{CPI_BASE_YEAR} average CPI-U (FRED CPIAUCSL) = {base_rows.mean():.3f}"
     log(f"Inflation-adjusted to {CPI_BASE_YEAR} dollars: factor ranges {c['cpi_factor'].min():.2f} to {c['cpi_factor'].max():.2f}")
     return c
@@ -323,66 +233,39 @@ def validate(c):
     log("\nValidation")
     checks = {
         "dateOfLoss >= 1978": bool((c["dateOfLoss"] >= "1978-01-01").all()),
-        "building_age in [0, 200]": bool(c["building_age_years"].between(0, 200).all()),
+        "building age in [0, 200]": bool(c["building_age_display_years"].between(0, 200).all()),
         "lat/lon inside Florida bounds": bool(c["latitude"].between(*FL_LAT).all() and c["longitude"].between(*FL_LON).all()),
         "amountPaid > 0": bool((c["amountPaid"] > 0).all()),
-        "log_amountpaid complete": bool(c["log_amountpaid"].notna().all()),
-        "encoded categoricals complete": bool(c[["flood_zone_encoded", "occupancy_encoded", "distance_bin",
-                                                 "storm_category_encoded"]].notna().all().all()),
+        "amountPaid_real > 0": bool((c["amountPaid_real"] > 0).all()),
+        "every claim has a flood zone group and an occupancy group": bool(c[["flood_zone_group", "occupancy_group"]].notna().all().all()),
+        "every claim has a coverage band": bool(c["coverage_band"].isin(COVERAGE_LABELS).all()),
         "all present county codes are valid FL FIPS": bool(c.loc[c["countyCode"].notna(), "countyName"].ne("Unknown").all()),
         "missing lat/lon < 2%": report["missing_latlon_pct"] < 2,
-        "historical_storm_freq is non-negative": bool((c["historical_storm_freq"] >= 0).all()),
+        "every claim has an event group": bool(c["event_group"].notna().all()),
     }
-    log(f"  historical_storm_freq range: {c['historical_storm_freq'].min()}-{c['historical_storm_freq'].max()}")
     for k, v in checks.items():
         log(f"  [{'PASS' if v else 'FAIL'}] {k}")
-    raw_skew, log_skew = c["amountPaid"].skew(), c["log_amountpaid"].skew()
-    log(f"  target skewness: raw {raw_skew:.2f}, log {log_skew:.2f}, "
-        f"log of inflation-adjusted {c['log_amountpaid_real'].skew():.2f}")
     report["checks"] = checks
-    report["skew_raw"], report["skew_log"] = round(float(raw_skew), 3), round(float(log_skew), 3)
-
-
-def check_against_flood_event(c, events):
-    """Compare our HURDAT2 match with FEMA's own storm label (floodEvent). Not used as a feature."""
-    e = events.rename("floodEvent")
-    named = e.str.contains(r"^(?:Hurricane|Tropical Storm)\b", case=False, na=False)
-    if named.sum() == 0:
-        return
-    got_storm = c.loc[named, "storm_id"].notna()
-    want = e[named].str.replace(r"^(?:Hurricane|Tropical Storm)\s+", "", regex=True).str.lower().str.strip()
-    same = [(isinstance(n, str) and w.startswith(n.lower())) for n, w in zip(c.loc[named, "nearest_storm_name"], want)]
-    report["flood_event_check"] = {
-        "claims_labelled_hurricane_or_TS_by_FEMA": int(named.sum()),
-        "matched_to_any_storm_pct": round(100 * float(got_storm.mean()), 1),
-        "matched_to_same_named_storm_pct": round(100 * float(np.mean(same)), 1),
-    }
-    log(f"\nAgainst FEMA floodEvent labels ({named.sum():,} claims FEMA calls a named hurricane/tropical storm):")
-    log(f"  we matched some storm: {100 * got_storm.mean():.1f}% | the same-named storm: {100 * np.mean(same):.1f}%")
 
 
 def main():
     raw = fetch_fema()
-    tracks = interpolate_tracks(parse_hurdat2(fetch_hurdat2()).query("storm_year >= @TRACK_START_YEAR"))
-
     claims = prepare_claims(raw)
-    claims = join_storms(claims, tracks)
     claims = engineer_features(claims)
     claims = add_real_dollars(claims)
     validate(claims)
-    if "floodEvent" in claims:
-        check_against_flood_event(claims, claims["floodEvent"])
 
-    cols = ["id", "dateOfLoss", "yearOfLoss", "latitude", "longitude", "countyCode", "countyName", "nfipCommunityName",
-            "ratedFloodZone", "flood_zone_group", "occupancyType", "yearOfConstruction", "elevatedBuildingIndicator",
-            "amountPaidOnBuildingClaim", "amountPaidOnContentsClaim", "amountPaidOnIncreasedCostOfComplianceClaim",
-            "amountPaid", "distance_from_track_mi", "storm_id", "nearest_storm_name", "storm_wind_speed_kt",
-            "storm_category", "days_to_storm", "building_age_years", "building_age_missing", "is_elevated",
-            "flood_zone_encoded", "occupancy_encoded", "distance_bin", "storm_category_encoded", "post_firm",
-            "historical_storm_freq", "log_amountpaid", "building_age_display_years", "occupancy_label", "occupancy_group",
-            "occupancy_group_encoded", "cpi_factor", "amountPaid_real", "log_amountpaid_real", "floodEvent"]
+    cols = ["id", "dateOfLoss", "yearOfLoss", "latitude", "longitude", "countyCode", "countyName", "ratedFloodZone",
+            "flood_zone_group", "occupancyType", "occupancy_label", "occupancy_group", "yearOfConstruction",
+            "elevatedBuildingIndicator", "is_elevated", "post_firm", "amountPaidOnBuildingClaim", "amountPaidOnContentsClaim",
+            "amountPaidOnIncreasedCostOfComplianceClaim", "amountPaid", "cpi_factor", "amountPaid_real",
+            "building_age_years", "building_age_missing", "building_age_display_years", "floors_group", "primary_residence",
+            "firm_group", "totalBuildingInsuranceCoverage", "coverage_band", "causeOfDamage", "cause_group", "waterDepth", "depth_band",
+            "elevationDifference", "elevation_band", "buildingDeductibleCode", "deductible_group", "foundationType", "foundation_group",
+            "floodEvent", "event", "event_group"]
     out = claims[[k for k in cols if k in claims]].rename(columns={"id": "claimId"})
     out["dateOfLoss"] = out["dateOfLoss"].dt.strftime("%Y-%m-%d")
+    OUT_CSV.parent.mkdir(exist_ok=True)
     out.round(2).to_csv(OUT_CSV, index=False)
     report["final_rows"], report["final_columns"] = len(out), out.shape[1]
     OUT_REPORT.write_text(json.dumps(report, indent=2, default=str))
