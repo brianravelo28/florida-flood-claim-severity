@@ -372,7 +372,7 @@ def tab2_layout():
 def tab3_layout():
     return html.Div([
         html.Div([field("Compare payouts by", dcc.Dropdown(id="t3-factor", options=[{"label": k, "value": k} for k in FACTORS],
-                                                           value="Flood zone", clearable=False, searchable=len(FACTORS) >= 7,
+                                                           value="Flood zone", clearable=False, searchable=False,
                                                            style={"width": "300px"}))],
                  className="controls card"),
         html.Div([dcc.Graph(id="t3-chart", config={"displayModeBar": False}), html.Div(id="t3-note")],

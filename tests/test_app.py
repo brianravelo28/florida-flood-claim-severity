@@ -154,11 +154,11 @@ def test_tables_get_no_zoom_tips():
     assert "Drag to" not in text_of(decades) and "About" not in text_of(decades), "the decade table has nothing to caution about"
 
 
-def test_the_risk_factor_dropdown_offers_the_new_factors_and_searches_once_it_has_seven():
+def test_the_risk_factor_dropdown_offers_the_new_factors_without_a_search_box():
     assert list(dash_app.FACTORS) == ["Flood zone", "Occupancy type", "Building floors", "Elevated building", "Building age",
                                       "Built after first flood map", "Primary residence", "Building coverage"]
     dropdown = dash_app.tab3_layout().children[0].children[0].children[1]
-    assert dropdown.searchable is True
+    assert dropdown.searchable is False
 
 
 def test_the_flood_map_factor_explains_its_definition_and_overlap_with_age():
