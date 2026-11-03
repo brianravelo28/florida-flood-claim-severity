@@ -59,8 +59,8 @@ FOUNDATION_LABELS = {"1": "Slab", "2": "Basement", "3": "Crawlspace", "4": "Elev
                      "5": "Elevated with enclosure (post, pile or pier)", "6": "Elevated with enclosure (not post, pile or pier)"}
 FOUNDATION_ORDER = list(FOUNDATION_LABELS.values()) + ["Not recorded"]
 
-# factor name -> (column in the claims table, display order); this is the order of the Risk Factors dropdown
-FACTOR_COLUMNS = {
+# factor name -> (column in the claims table, display order); the Risk Factors dropdown lists them alphabetically
+_FACTORS = {
     "Flood zone": ("flood_zone_group", FLOOD_ORDER),
     "Occupancy type": ("occupancy_group", OCC_ORDER),
     "Building floors": ("floors_group", FLOOR_ORDER),
@@ -75,3 +75,4 @@ FACTOR_COLUMNS = {
     "Cause of flooding": ("cause_group", CAUSE_ORDER),
     "Flood water depth": ("depth_band", DEPTH_ORDER),
 }
+FACTOR_COLUMNS = dict(sorted(_FACTORS.items()))

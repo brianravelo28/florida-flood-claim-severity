@@ -157,9 +157,10 @@ def test_tables_get_no_zoom_tips():
 
 def test_the_risk_factor_dropdown_offers_the_new_factors_without_a_search_box():
     assert list(dash_app.FACTORS) == [
-        "Flood zone", "Occupancy type", "Building floors", "Foundation type", "Elevated building", "Elevation vs base flood level",
-        "Building age", "Built after first flood map", "Primary residence", "Building coverage", "Building deductible",
-        "Cause of flooding", "Flood water depth"]
+        "Building age", "Building coverage", "Building deductible", "Building floors", "Built after first flood map",
+        "Cause of flooding", "Elevated building", "Elevation vs base flood level", "Flood water depth", "Flood zone",
+        "Foundation type", "Occupancy type", "Primary residence"]
+    assert list(dash_app.FACTORS) == sorted(dash_app.FACTORS)
     dropdown = dash_app.tab3_layout().children[0].children[0].children[1]
     assert dropdown.searchable is False
 
