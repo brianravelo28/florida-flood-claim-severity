@@ -7,7 +7,7 @@
     "dateOfLoss before 1978": 0,
     "outside Florida bounds": 105
   },
-  "rows_identical_to_an_earlier_row_except_id": 1270,
+  "rows_identical_to_an_earlier_row_except_id": 996,
   "construction_year_unknown_pct": 3.76,
   "construction_year_unusable": 11719,
   "construction_date_placeholder_1492": 11466,
@@ -30,5 +30,5 @@
     "every claim has an event group": true
   },
   "final_rows": 311507,
-  "final_columns": 33
+  "final_columns": 43
 }

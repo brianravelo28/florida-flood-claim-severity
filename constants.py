@@ -18,7 +18,7 @@ EVENT_MERGES = {"Hurricane Georges (Keys)": "Hurricane Georges", "Hurricane Geor
 EVENT_NEEDS_YEAR = {"Tropical Storm Alberto"}
 
 # Date of the OpenFEMA pull behind the published numbers (see the SHA-256 in docs/METHODOLOGY.md).
-FEMA_PULL_DATE = "2026-10-20"
+FEMA_PULL_DATE = "2026-11-03"
 
 # Groups with fewer claims than this are flagged or left out of rankings and medians.
 MIN_CLAIMS = 30
@@ -35,14 +35,43 @@ FLOOR_ORDER = list(FLOOR_LABELS.values()) + ["Not recorded"]
 PRIMARY_LABELS = ["Primary residence", "Not a primary residence"]
 FIRM_LABELS = ["Built before the first flood map", "Built after the first flood map"]
 
+# Labels for FEMA's coded fields, from the OpenFEMA data dictionary for NfipClaims. A code the dictionary does not list is "Other or
+# not recorded" (cause) or "Not recorded" (the rest).
+CAUSE_LABELS = {"4": "Accumulation of rainfall or snowmelt", "1": "Tidal water overflow", "2": "Stream, river or lake overflow",
+                "3": "Alluvial fan overflow", "0": "Other causes"}
+CAUSE_ORDER = list(CAUSE_LABELS.values()) + ["Other or not recorded"]
+
+# Water depth is in inches (FEMA notes some entries were recorded in feet); negative values count as not recorded.
+DEPTH_BINS = [-1, 0, 6, 12, 36, 1e9]
+DEPTH_LABELS = ["0 in", "1-6 in", "7-12 in", "13-36 in", "Over 36 in"]
+DEPTH_ORDER = DEPTH_LABELS + ["Not recorded"]
+
+# Feet between the building's lowest floor (as used for rating) and the base flood elevation.
+ELEVATION_LABELS = ["Below the base flood level", "At the base flood level", "1 ft above", "2 ft above", "3 ft or more above"]
+ELEVATION_ORDER = ELEVATION_LABELS + ["Not recorded"]
+
+DEDUCTIBLE_LABELS = {"H": "$200", "0": "$500", "9": "$750", "1": "$1,000", "F": "$1,250", "G": "$1,500", "2": "$2,000", "3": "$3,000",
+                     "4": "$4,000", "5": "$5,000", "A": "$10,000", "B": "$15,000", "C": "$20,000", "D": "$25,000", "E": "$50,000"}
+DEDUCTIBLE_ORDER = list(DEDUCTIBLE_LABELS.values()) + ["Not recorded"]
+
+# Code 0 is not in FEMA's list of foundation types; it is 95-100% of claims before 2010, so it is read as "not recorded".
+FOUNDATION_LABELS = {"1": "Slab", "2": "Basement", "3": "Crawlspace", "4": "Elevated, no enclosure (post, pile or pier)",
+                     "5": "Elevated with enclosure (post, pile or pier)", "6": "Elevated with enclosure (not post, pile or pier)"}
+FOUNDATION_ORDER = list(FOUNDATION_LABELS.values()) + ["Not recorded"]
+
 # factor name -> (column in the claims table, display order); this is the order of the Risk Factors dropdown
 FACTOR_COLUMNS = {
     "Flood zone": ("flood_zone_group", FLOOD_ORDER),
     "Occupancy type": ("occupancy_group", OCC_ORDER),
     "Building floors": ("floors_group", FLOOR_ORDER),
+    "Foundation type": ("foundation_group", FOUNDATION_ORDER),
     "Elevated building": ("elevated", ELEVATED_LABELS),
+    "Elevation vs base flood level": ("elevation_band", ELEVATION_ORDER),
     "Building age": ("age_band", AGE_LABELS),
     "Built after first flood map": ("firm_group", FIRM_LABELS),
     "Primary residence": ("primary_residence", PRIMARY_LABELS),
     "Building coverage": ("coverage_band", COVERAGE_LABELS),
+    "Building deductible": ("deductible_group", DEDUCTIBLE_ORDER),
+    "Cause of flooding": ("cause_group", CAUSE_ORDER),
+    "Flood water depth": ("depth_band", DEPTH_ORDER),
 }

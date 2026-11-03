@@ -77,6 +77,12 @@ AXIS_SHORT_LABELS = {
     "Townhouse, three or more floors": "Townhouse, 3+", "Not a primary residence": "Not primary",
     "Built before the first flood map": "Before first map", "Built after the first flood map": "After first map",
     "No building coverage": "None",
+    "Accumulation of rainfall or snowmelt": "Rainfall / snowmelt", "Tidal water overflow": "Tidal overflow",
+    "Stream, river or lake overflow": "Stream / river / lake", "Alluvial fan overflow": "Alluvial fan",
+    "Below the base flood level": "Below", "At the base flood level": "At", "3 ft or more above": "3+ ft above",
+    "Elevated, no enclosure (post, pile or pier)": "Elevated, open",
+    "Elevated with enclosure (post, pile or pier)": "Enclosed, post/pile",
+    "Elevated with enclosure (not post, pile or pier)": "Enclosed, other",
 }
 
 FACTOR_NOTES = {
@@ -86,6 +92,12 @@ FACTOR_NOTES = {
     "Building floors": None,
     "Primary residence": None,
     "Building coverage": None,
+    "Foundation type": "FEMA records the foundation type mostly for recent claims; earlier claims are listed as Not recorded.",
+    "Elevation vs base flood level": "Feet between the building's lowest floor, as used for rating, and the base flood elevation.",
+    "Building deductible": None,
+    "Cause of flooding": None,
+    "Flood water depth": "Depth in inches. FEMA notes that some measurements were recorded in feet, and negative values are counted as "
+                         "not recorded.",
     "Built after first flood map": (
         "FEMA counts a building as built after the first flood map (post-FIRM) when construction started after December 31, 1974 "
         "or after the community's first Flood Insurance Rate Map, whichever is later. These buildings are newer, so the comparison "
@@ -146,6 +158,11 @@ def money(x):
 
 def pct(x):
     return f"{x:.1f}%" if isinstance(x, (int, float)) else "-"
+
+
+def compact_count(n):
+    n = int(n)
+    return f"{n / 1e3:.0f}k" if n >= 10_000 else f"{n / 1e3:.1f}k" if n >= 1_000 else str(n)
 
 
 def years_label(years):
@@ -598,7 +615,9 @@ def update_tab3(years, counties, occs, floods, factor):
     big = st[st["n"] >= MIN_CLAIMS]
     if big.empty:
         return empty_fig(f"No group has {MIN_CLAIMS} or more claims", 460), html.Div(), note, html.Div()
-    labels = [f"{AXIS_SHORT_LABELS.get(str(i), str(i))}<br>{int(r['n']):,} claims" for i, r in big.iterrows()]
+    many = len(big) > 8  # with many groups the full "12,345 claims" labels run into each other, so counts are shortened
+    labels = [f"{AXIS_SHORT_LABELS.get(str(i), str(i))}<br>" + (compact_count(r["n"]) if many else f"{int(r['n']):,} claims")
+              for i, r in big.iterrows()]
     # Plotly's box trace ignores hovertemplate for its auto-generated per-stat labels (always shows every fence/
     # min/max it was given), so the box's own hover is disabled and an invisible full-height bar supplies the
     # tooltip instead, with exactly the fields wanted.
@@ -614,6 +633,8 @@ def update_tab3(years, counties, occs, floods, factor):
     style_fig(fig, f"Payout by {factor.title()}", 460, unified=False, center_title=True)
     log_dollar_axis(fig, "y", "Payout (2025 $, log scale)")
     fig.update_xaxes(tickangle=0, tickfont=dict(size=12))
+    if many:
+        fig.update_xaxes(title="Claims in each group (under its label)")
     rows = [[str(i), count_cell(r["n"]), f"{100 * r['n'] / total_n:.1f}%", money(r["q50"]), money(r["mean"]),
              f"{money(r['q25'])} to {money(r['q75'])}"] for i, r in st.iterrows()]
     tbl = table([factor.title(), "Claims", "% of Claims", "Median Payout", "Mean Payout", "Middle 50% of Claims"], rows)

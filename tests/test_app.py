@@ -100,7 +100,8 @@ def test_risk_factors_tab(factor):
     assert "Drag to zoom into part of the chart" in text_of(note), "every chart's About section carries the zoom tip"
     assert "legend" not in text_of(note), "no legend on these charts, so no legend tip"
     assert ("Occupancy type" == factor) == ("codes describe the same building types" in text_of(note))
-    assert "claims" in fig.data[0].x[0], "each group's claim count is on the chart"
+    shown = "claims" in fig.data[0].x[0] or "Claims in each group" in (fig.layout.xaxis.title.text or "")
+    assert shown, "each group's claim count is on the chart"
     assert ("Building age" == factor) == (extra is not None and bool(getattr(extra, "children", None)))
 
 
@@ -155,8 +156,10 @@ def test_tables_get_no_zoom_tips():
 
 
 def test_the_risk_factor_dropdown_offers_the_new_factors_without_a_search_box():
-    assert list(dash_app.FACTORS) == ["Flood zone", "Occupancy type", "Building floors", "Elevated building", "Building age",
-                                      "Built after first flood map", "Primary residence", "Building coverage"]
+    assert list(dash_app.FACTORS) == [
+        "Flood zone", "Occupancy type", "Building floors", "Foundation type", "Elevated building", "Elevation vs base flood level",
+        "Building age", "Built after first flood map", "Primary residence", "Building coverage", "Building deductible",
+        "Cause of flooding", "Flood water depth"]
     dropdown = dash_app.tab3_layout().children[0].children[0].children[1]
     assert dropdown.searchable is False
 
@@ -164,3 +167,18 @@ def test_the_risk_factor_dropdown_offers_the_new_factors_without_a_search_box():
 def test_the_flood_map_factor_explains_its_definition_and_overlap_with_age():
     note = dash_app.update_tab3(*no_filters(), "Built after first flood map")[2]
     assert "December 31, 1974" in text_of(note) and "overlaps with building age" in text_of(note)
+
+
+def test_the_depth_and_foundation_factors_carry_their_caveats():
+    depth = text_of(dash_app.update_tab3(*no_filters(), "Flood water depth")[2])
+    assert "recorded in feet" in depth and "negative values are counted as not recorded" in depth
+    assert "mostly for recent claims" in text_of(dash_app.update_tab3(*no_filters(), "Foundation type")[2])
+
+
+def test_charts_with_many_groups_use_short_claim_counts_under_their_labels():
+    fig = dash_app.update_tab3(*no_filters(), "Building deductible")[0]
+    labels = list(fig.data[0].x)
+    assert len(labels) > 8 and all("claims" not in label for label in labels)
+    assert "67k" in " ".join(labels) and "Claims in each group" in fig.layout.xaxis.title.text
+    few = dash_app.update_tab3(*no_filters(), "Primary residence")[0]
+    assert all(label.endswith("claims") for label in few.data[0].x)

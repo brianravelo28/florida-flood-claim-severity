@@ -5,8 +5,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from constants import (COVERAGE_BINS, COVERAGE_LABELS, EVENT_MERGES, EVENT_NEEDS_YEAR, FIRM_LABELS, FLOOR_LABELS,
-                       NAMED_STORM_PATTERN, PRIMARY_LABELS)
+from constants import (CAUSE_LABELS, COVERAGE_BINS, COVERAGE_LABELS, DEDUCTIBLE_LABELS, DEPTH_BINS, DEPTH_LABELS, ELEVATION_LABELS,
+                       EVENT_MERGES, EVENT_NEEDS_YEAR, FIRM_LABELS, FLOOR_LABELS, FOUNDATION_LABELS, NAMED_STORM_PATTERN,
+                       PRIMARY_LABELS)
 from fetch_data import fetch_cpi, fetch_fema
 
 ROOT = Path(__file__).parent
@@ -146,6 +147,24 @@ def encode_flood_zone(z):
     return enc, label
 
 
+def _code(series):
+    """A coded field as clean text ('1', 'A'): numeric codes can arrive as 1, 1.0 or '1' depending on the column's other values."""
+    return series.astype("string").str.strip().str.replace(r"\.0$", "", regex=True)
+
+
+def label_risk_factors(c):
+    """Readable groups for the fields behind the Risk Factors tab, using FEMA's own code definitions."""
+    c["cause_group"] = _code(c["causeOfDamage"]).map(CAUSE_LABELS).fillna("Other or not recorded")
+    depth = pd.to_numeric(c["waterDepth"], errors="coerce")
+    c["depth_band"] = pd.cut(depth.where(depth >= 0), DEPTH_BINS, labels=DEPTH_LABELS).astype("string").fillna("Not recorded")
+    elev = pd.to_numeric(c["elevationDifference"], errors="coerce")
+    c["elevation_band"] = np.select([elev.isna(), elev < 0, elev == 0, elev == 1, elev == 2],
+                                    ["Not recorded"] + ELEVATION_LABELS[:4], default=ELEVATION_LABELS[4])
+    c["deductible_group"] = _code(c["buildingDeductibleCode"]).map(DEDUCTIBLE_LABELS).fillna("Not recorded")
+    c["foundation_group"] = _code(c["foundationType"]).map(FOUNDATION_LABELS).fillna("Not recorded")
+    return c
+
+
 def label_events(c):
     """FEMA's own event label (floodEvent), tidied: Georges is one storm that FEMA split by region, and Alberto is two
     different storms (1994 and 2006) with one name, so it gets its year. Every other label is kept as FEMA wrote it."""
@@ -186,7 +205,7 @@ def engineer_features(c):
     c["occupancy_label"] = c["occupancy_encoded"].map(OCCUPANCY_LABELS)
     c["occupancy_group"] = c["occupancy_encoded"].map(OCCUPANCY_TO_GROUP)
     c["countyName"] = c["countyCode"].astype("Int64").map(FL_COUNTIES).fillna("Unknown")
-    return label_events(c)
+    return label_events(label_risk_factors(c))
 
 
 def add_real_dollars(c):
@@ -241,7 +260,9 @@ def main():
             "elevatedBuildingIndicator", "is_elevated", "post_firm", "amountPaidOnBuildingClaim", "amountPaidOnContentsClaim",
             "amountPaidOnIncreasedCostOfComplianceClaim", "amountPaid", "cpi_factor", "amountPaid_real",
             "building_age_years", "building_age_missing", "building_age_display_years", "floors_group", "primary_residence",
-            "firm_group", "totalBuildingInsuranceCoverage", "coverage_band", "floodEvent", "event", "event_group"]
+            "firm_group", "totalBuildingInsuranceCoverage", "coverage_band", "causeOfDamage", "cause_group", "waterDepth", "depth_band",
+            "elevationDifference", "elevation_band", "buildingDeductibleCode", "deductible_group", "foundationType", "foundation_group",
+            "floodEvent", "event", "event_group"]
     out = claims[[k for k in cols if k in claims]].rename(columns={"id": "claimId"})
     out["dateOfLoss"] = out["dateOfLoss"].dt.strftime("%Y-%m-%d")
     OUT_CSV.parent.mkdir(exist_ok=True)

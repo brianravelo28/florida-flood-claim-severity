@@ -59,7 +59,8 @@ def feature_claims(construction, loss_year=2000, post_firm=False, event=None):
         "elevatedBuildingIndicator": [False] * n, "postFIRMConstructionIndicator": [post_firm] * n,
         "ratedFloodZone": ["AE"] * n, "occupancyType": [1] * n, "countyCode": [12071] * n,
         "floodEvent": [event] * n, "numberOfFloorsInTheInsuredBuilding": [1.0] * n, "primaryResidenceIndicator": [True] * n,
-        "totalBuildingInsuranceCoverage": [250000.0] * n,
+        "totalBuildingInsuranceCoverage": [250000.0] * n, "causeOfDamage": ["4"] * n, "waterDepth": [1.0] * n,
+        "elevationDifference": [0.0] * n, "buildingDeductibleCode": ["1"] * n, "foundationType": [1] * n,
     })
 
 
@@ -195,3 +196,42 @@ def test_coverage_bands_give_the_250k_limit_and_no_coverage_their_own_groups():
     out = bd.engineer_features(c)
     assert out["coverage_band"].tolist() == ["No building coverage", "Up to $50k", "Up to $50k", "$50k-$100k", "$100k-$150k",
                                              "$150k-$250k", "$250k", "Over $250k"]
+
+
+def grouped(**columns):
+    n = len(next(iter(columns.values())))
+    c = feature_claims(["1990-01-01T00:00:00.000Z"] * n)
+    for name, values in columns.items():
+        c[name] = values
+    return bd.engineer_features(c)
+
+
+def test_cause_of_flooding_uses_fema_codes_and_groups_the_rest():
+    out = grouped(causeOfDamage=["4", "1", 2.0, "3", "0", "9", "B", "D", None, "@"])
+    assert out["cause_group"].tolist() == ["Accumulation of rainfall or snowmelt", "Tidal water overflow", "Stream, river or lake overflow",
+                                           "Alluvial fan overflow", "Other causes"] + ["Other or not recorded"] * 5
+
+
+def test_flood_water_depth_bands_and_negative_values_count_as_not_recorded():
+    out = grouped(waterDepth=[0, 1, 6, 7, 12, 13, 36, 37, 376, -1, np.nan])
+    assert out["depth_band"].tolist() == ["0 in", "1-6 in", "1-6 in", "7-12 in", "7-12 in", "13-36 in", "13-36 in", "Over 36 in",
+                                          "Over 36 in", "Not recorded", "Not recorded"]
+
+
+def test_elevation_bands_compare_the_lowest_floor_with_the_base_flood_level():
+    out = grouped(elevationDifference=[-5, -1, 0, 1, 2, 3, 40, np.nan])
+    assert out["elevation_band"].tolist() == ["Below the base flood level", "Below the base flood level", "At the base flood level",
+                                              "1 ft above", "2 ft above", "3 ft or more above", "3 ft or more above", "Not recorded"]
+
+
+def test_deductible_codes_become_dollar_amounts():
+    out = grouped(buildingDeductibleCode=["0", "1", "9", "F", "5", "A", "E", "H", None, "Z"])
+    assert out["deductible_group"].tolist() == ["$500", "$1,000", "$750", "$1,250", "$5,000", "$10,000", "$50,000", "$200",
+                                                "Not recorded", "Not recorded"]
+
+
+def test_foundation_type_reads_fema_codes_and_treats_zero_as_not_recorded():
+    out = grouped(foundationType=[1, "2", 3.0, 4, 5, 6, 0, None])
+    assert out["foundation_group"].tolist() == ["Slab", "Basement", "Crawlspace", "Elevated, no enclosure (post, pile or pier)",
+                                                "Elevated with enclosure (post, pile or pier)",
+                                                "Elevated with enclosure (not post, pile or pier)", "Not recorded", "Not recorded"]

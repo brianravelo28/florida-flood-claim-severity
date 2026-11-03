@@ -29,7 +29,8 @@ def test_claim_counts_agree_across_files(claims):
 
 def test_claims_table_has_no_gaps_where_the_app_needs_values(claims):
     for col in ("occupancy_group", "flood_zone_group", "elevated", "age_band", "event_group", "yearOfLoss", "amountPaid_real",
-                "floors_group", "primary_residence", "firm_group", "coverage_band"):
+                "floors_group", "primary_residence", "firm_group", "coverage_band", "cause_group", "depth_band", "elevation_band",
+                "deductible_group", "foundation_group"):
         assert claims[col].notna().all(), col
     assert (claims["amountPaid_real"] > 0).all()
     agg = load("aggregates.json")
@@ -91,3 +92,11 @@ def test_the_risk_factor_columns_cover_every_claim(claims):
         assert col in claims.columns, name
         assert set(claims[col].astype(str)) <= set(order), name
     assert claims["coverage_band"].astype(str).value_counts().idxmax() == "$250k"
+
+
+def test_the_new_factors_have_the_expected_shape(claims):
+    cause = claims["cause_group"].astype(str).value_counts(normalize=True)
+    assert cause.idxmax() == "Accumulation of rainfall or snowmelt" and cause["Tidal water overflow"] > 0.25
+    assert claims["foundation_group"].astype(str).value_counts().idxmax() == "Not recorded"
+    assert (claims["depth_band"].astype(str) == "Not recorded").mean() < 0.15
+    assert claims.loc[claims["yearOfLoss"] >= 2020, "foundation_group"].astype(str).eq("Not recorded").mean() < 0.1
