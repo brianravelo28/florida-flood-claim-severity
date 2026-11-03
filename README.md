@@ -2,101 +2,82 @@
 
 ![Florida Flood Claim Severity dashboard](docs/screenshot.png)
 
-An interactive dashboard of what Florida's federal flood-insurance claims cost, and what drives the cost. It joins every paid claim to the hurricane or tropical storm that most likely caused it, and puts all payouts in constant 2025 dollars so a 1992 claim and a 2024 claim can be compared.
+An interactive dashboard of what Florida's federal flood-insurance claims have paid since 1978, and which building and location factors go with larger payouts. Every payout is in constant 2025 dollars, so a 1992 claim and a 2024 claim can be compared.
 
 **Live dashboard: https://florida-flood-claim-severity.onrender.com/**
 
-## What you get
+**Headline.** In 2025 dollars, the median paid claim rose from about $4,800 in 1978-79 (4,077 claims) to about $78,000 in 2020-26 (124,593 claims). The 2020s include the Ian, Helene and Milton seasons; without those three storms' claims the 2020s median is about $42,500, still about 51% above the 2010s median of about $28,000. The figures cover claims that were paid, and about 30% of claims were closed without payment.
 
-- **311,507 paid claims, 1978 to 2026,** from the National Flood Insurance Program (NFIP), with each payout adjusted for inflation (CPI-U, the Consumer Price Index for All Urban Consumers).
-- **Storm matching:** 77.8% of claims are matched to a storm that passed within 150 miles and 7 days of the loss. Of the claims FEMA itself labels as a named hurricane or tropical storm, 95.6% match the same-named storm.
-- **A model, with its limits stated.** On storm seasons it has not seen, the model explains about a fifth of the variation in what a paid claim costs (R² 0.20), and a typical prediction is off by about 74%. That is a modest signal, not a precise predictor. It is most useful for seeing which factors matter: building age, storm wind speed, whether the building is elevated, and location.
+## Who it is for
 
-## The dashboard
+People who want to see what Florida flood claims pay and how that has changed: insurance and risk analysts, journalists and homeowners.
 
-A shared filter bar (**Loss Years, County, Occupancy, Flood Zone, Storm Categories**; empty means all) controls the first four tabs. The Claim Estimator has its own controls.
+## What the dashboard shows
+
+A shared filter bar (**Loss Years, County, Occupancy, Flood Zone**; empty means all) drives every tab. Every chart and table shows the number of claims behind it, and a count under 30 carries an asterisk.
 
 | Tab | What it shows |
 |---|---|
-| **Overview** | Claims, total paid and median claim by year of loss (hover a bar for the storm behind that year), plus a county map. |
-| **Storms** | The top storms by claims, total paid or median claim, with a table. |
-| **Risk Factors** | Payout distributions by storm category, flood zone, occupancy type, elevated building, building age and distance from the storm track, with a table of claims, share of claims, median, mean and middle 50%. |
-| **Model** | How well the model does on unseen years (with the average-prediction baseline and a leaky random split for contrast), calibration charts for the filtered slice, feature importance, and tests of whether building age is just a stand-in for the loss year. |
-| **Claim Estimator** | A what-if tool: the typical payout and an 80% range for a hypothetical claim, as storm strength changes and across loss years. It shows patterns in past claims, not the effect of changing a storm or a building. |
+| **Overview** | Claims, total paid and median claim by year of loss and by decade, plus a county map. |
+| **Storms** | FEMA's own event label for each claim: the named hurricanes and tropical storms ranked by claims, total paid or median claim (each with its year), and the other FEMA-labeled events. |
+| **Risk Factors** | Payout distributions, with a table of claims, share of claims, median, mean and middle 50%, for 13 factors: Building age, building coverage, building deductible, building floors, built after first flood map, cause of flooding, elevated building, elevation vs base flood level, flood water depth, flood zone, foundation type, occupancy type, primary residence. Building age also has a view within each decade of loss. |
 
 ## Data
 
 | Source | What |
 |---|---|
-| [OpenFEMA NFIP Redacted Claims, v3](https://www.fema.gov/openfema-data-page/nfip-redacted-claims-v3) (FEMA, Federal Emergency Management Agency) | 448,618 Florida claims, pulled 2026-10-20. |
-| [NOAA HURDAT2](https://www.nhc.noaa.gov/data/) (Hurricane Database 2) | Atlantic storm positions and wind speeds, every six hours since 1851. |
-| [FRED CPIAUCSL](https://fred.stlouisfed.org/series/CPIAUCSL) | CPI-U, for the inflation adjustment. |
+| [OpenFEMA NFIP Redacted Claims, v3](https://www.fema.gov/openfema-data-page/nfip-redacted-claims-v3) | 448,618 Florida claims, pulled 2026-11-03 (FEMA last refreshed the dataset on 2026-09-09). NFIP is the National Flood Insurance Program, run by FEMA, the Federal Emergency Management Agency. |
+| [FRED CPIAUCSL](https://fred.stlouisfed.org/series/CPIAUCSL) | CPI-U (Consumer Price Index for All Urban Consumers), for the inflation adjustment to 2025 dollars. |
 
-Payout is building plus contents plus increased-cost-of-compliance payments. About 30% of claims were closed without payment and are excluded, so the numbers describe the cost of a claim given that it was paid. The data use FEMA's published, location-blurred coordinates (about 7 miles). This project is not endorsed by FEMA.
+Payout is the building, contents and increased-cost-of-compliance payments added together. After cleaning, the dashboard covers 311,507 paid claims totaling $23.79 billion. 88.3% of them carry a FEMA event label, and 75.9% name a hurricane or tropical storm.
 
-## How it works, and how far to trust it
+## Reading the numbers
 
-Storm tracks are interpolated to hourly positions and each claim takes the closest track point within 150 miles and 7 days. A LightGBM model (gradient-boosted decision trees) predicts the log of the 2025-dollar payout from 13 building, storm and location features. It is scored with cross-validation that keeps each loss year entirely in either training or testing, because claims from one storm are near-duplicates and a random split overstates skill (R² 0.41 instead of 0.20). Trained through 2019 and tested on 2020 onward, the model scores below zero (−0.24, against −0.62 for predicting the average), because payouts have grown faster than inflation.
+- **Paid claims.** The figures describe what a claim cost once it was paid.
+- **Locations.** FEMA blurs coordinates to 0.1 degree (about 7 miles), so a point can fall in the wrong county; the county field is the reliable location.
+- **Associations.** The dashboard describes patterns in past claims. Payouts have grown much faster than inflation, and possible reasons include storm severity, rebuilding costs, coverage limits, claims handling and the mix of insured buildings.
+- **Building age and loss year move together.** The median building age at loss was 15 years in the 1980s, 38 in the 2010s and 50 in the 2020s, so larger payouts among older buildings may reflect when the claim happened. The Building age view compares ages within each decade.
+- **Event labels.** Storm names are FEMA's own labels, and a claim without a label can still be storm-related.
 
-[docs/METHODOLOGY.md](docs/METHODOLOGY.md) covers every cleaning step with its counts, how the storm join was tuned and what that check does and does not show, the evaluation by fold and by year, the tests of building age and the loss year, how the Claim Estimator is calibrated, and the limitations.
+[docs/METHODOLOGY.md](docs/METHODOLOGY.md) lists every cleaning step with its counts and how each factor is grouped.
 
 ## Run it
 
-Requires Python 3.13 or newer (tested on 3.13 and 3.14; the hosted dashboard runs on 3.14).
+Requires Python 3.13 or newer (the hosted dashboard runs on 3.14).
 
 ```bash
 pip install -r requirements.txt
 
-python fetch_data.py             # download and cache raw data into data/raw/ (gitignored)
-python build_dataset.py          # clean, storm-join, inflation-adjust, engineer features
-python train_model.py            # year-grouped cross-validation, metrics, out-of-fold predictions
-python train_year_model.py       # the loss-year model behind the Claim Estimator (required)
-python ablation_year_control.py  # optional, about 10 min: is building age a stand-in for the loss year?
-python ablation_postfirm.py      # optional, about 10 min: does FEMA's post-FIRM flag replace or add to age?
-python ablation_placeholder_age.py  # optional, a few min: alternative fill for unusable construction dates
-python ablation_redundant_inputs.py  # optional, about 5 min: do the distance band and storm category earn their place?
-python build_deploy_data.py      # compact bundle for the app -> deploy_data/
-python app.py                    # dashboard at http://localhost:8058
+python fetch_data.py         # download and cache the raw data into data/raw/ (gitignored)
+python build_dataset.py      # clean, inflation-adjust, group and label the claims
+python build_deploy_data.py  # compact bundle for the app -> deploy_data/
+python app.py                # dashboard at http://localhost:8058
 ```
 
-`deploy_data/` is committed, so the dashboard runs without any of the steps above. A fresh pull from OpenFEMA returns FEMA's current data, which can differ slightly from the 2026-10-20 pull behind the published numbers (see Reproducibility in the Methodology).
-
-The hosted dashboard runs on Render with `wsgi.py` as its entry point. `render.yaml` records the service's settings (build command, start command, plan, Python version) for reference; the live service is controlled from Render's dashboard, so editing the file does not change the deployment. Deployment notes are in the Methodology.
+`deploy_data/` is committed, so the dashboard runs without any of the steps above. The hosted dashboard runs on Render with `wsgi.py` as its entry point; `render.yaml` records the service's settings for reference, and Render's dashboard controls the live service.
 
 ## Tests
 
-The test suite (about 40 tests) checks that the pipeline does what the documentation says, using small hand-built examples, so they need no downloaded data and no network. They run in about 15 seconds, and on every push through GitHub Actions. Examples of what they check:
-
-- **Cleaning:** each exclusion removes the right rows and is counted; the three paid fields are summed; the 1492 placeholder and other unusable construction dates are flagged.
-- **Storm join:** a claim matches the nearest storm inside 150 miles and 7 days and not outside either limit; the storm-frequency feature counts only earlier years.
-- **Inflation:** the adjustment factor is 1 in the base year, and the missing October 2025 CPI month is interpolated.
-- **Evaluation:** in the year-grouped cross-validation, no loss year appears in both the training and test side of a fold.
-- **Committed bundle and dashboard:** `deploy_data/` is internally consistent (counts, metrics, the estimator model), and every dashboard callback returns without error, including when a filter matches no claims.
+About 70 tests run in under half a minute with no network access, and on every push through GitHub Actions (Python 3.13 and 3.14). They check the cleaning counts and the payout sum, the inflation adjustment, the event labels, the grouping of every Risk Factors variable, the consistency of the committed `deploy_data/`, and that every dashboard callback returns, including when a filter matches no claims.
 
 ```bash
 pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest
 ```
 
-They do not check page layout, the live Render deployment, or whether the model is any good; model quality is what the evaluation in the Methodology measures.
-
 ## Files
 
 | File | Purpose |
 |---|---|
-| `fetch_data.py` | Download and cache FEMA claims, HURDAT2 and CPI |
-| `build_dataset.py` | Cleaning, storm join, features, inflation adjustment, validation |
-| `train_model.py` | LightGBM training and evaluation (year-grouped cross-validation) |
-| `train_year_model.py` | The loss-year model the Claim Estimator uses |
-| `ablation_*.py` | Tests of whether building age is a stand-in for the loss year, whether the post-FIRM flag helps, and how to fill unusable construction dates |
-| `build_deploy_data.py` | Packages the claims table, models and metrics into `deploy_data/` |
-| `constants.py` | Category labels shared by the build script and the app |
+| `fetch_data.py` | Download and cache FEMA claims and CPI-U |
+| `build_dataset.py` | Cleaning, inflation adjustment, grouping, event labels, validation |
+| `build_deploy_data.py` | Packages the claims table and the headline numbers into `deploy_data/` |
+| `constants.py` | Category labels, FEMA code definitions and thresholds shared by the pipeline and the app |
 | `app.py`, `wsgi.py` | The Dash dashboard and its hosting entry point |
 | `render.yaml`, `requirements-render.txt` | The hosted service's settings (for reference) and the hosted app's dependencies |
-| `requirements.txt` | Dependencies for the full pipeline and the app |
+| `requirements.txt`, `requirements-dev.txt` | Dependencies for the pipeline and app, and for the tests |
+| `tests/`, `pytest.ini`, `.github/workflows/tests.yml` | The test suite and the workflow that runs it |
 | `deploy_data/` | What the hosted app loads |
-| `tests/`, `pytest.ini`, `requirements-dev.txt` | The test suite and its dependency |
-| `.github/workflows/tests.yml` | Runs the tests on every push |
-| `docs/METHODOLOGY.md` | Methods, evaluation, limitations and reproducibility |
+| `docs/METHODOLOGY.md` | Sources, cleaning, grouping, reading the numbers, reproducibility |
 
 Released under the MIT License.
