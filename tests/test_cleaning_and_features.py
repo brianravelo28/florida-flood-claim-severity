@@ -58,7 +58,8 @@ def feature_claims(construction, loss_year=2000, post_firm=False, event=None):
         "originalConstructionDate": construction, "yearOfLoss": [loss_year] * n,
         "elevatedBuildingIndicator": [False] * n, "postFIRMConstructionIndicator": [post_firm] * n,
         "ratedFloodZone": ["AE"] * n, "occupancyType": [1] * n, "countyCode": [12071] * n,
-        "floodEvent": [event] * n,
+        "floodEvent": [event] * n, "numberOfFloorsInTheInsuredBuilding": [1.0] * n, "primaryResidenceIndicator": [True] * n,
+        "totalBuildingInsuranceCoverage": [250000.0] * n,
     })
 
 
@@ -168,3 +169,29 @@ def test_inflation_factor_is_one_in_the_base_year(monkeypatch):
     assert out["cpi_factor"].iloc[0] == pytest.approx(1.0)
     assert out["amountPaid_real"].iloc[1] == pytest.approx(1250.0)  # CPI 80 then, 100 in the base year
     assert bd.report["cpi_interpolated_months"] == ["2025-10"]
+
+
+def test_floors_are_fema_categories_not_counts():
+    c = feature_claims(["1990-01-01T00:00:00.000Z"] * 8)
+    c["numberOfFloorsInTheInsuredBuilding"] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, np.nan, 2.0]
+    out = bd.engineer_features(c)
+    assert out["floors_group"].tolist() == ["One floor", "Two floors", "Three or more floors", "Split-level",
+                                            "Manufactured home or trailer on foundation", "Townhouse, three or more floors",
+                                            "Not recorded", "Two floors"]
+
+
+def test_primary_residence_and_first_flood_map_groups():
+    c = feature_claims(["1990-01-01T00:00:00.000Z"] * 3)
+    c["primaryResidenceIndicator"] = [True, "True", False]
+    c["postFIRMConstructionIndicator"] = [True, False, "True"]
+    out = bd.engineer_features(c)
+    assert out["primary_residence"].tolist() == ["Primary residence", "Primary residence", "Not a primary residence"]
+    assert out["firm_group"].tolist() == ["Built after the first flood map", "Built before the first flood map", "Built after the first flood map"]
+
+
+def test_coverage_bands_give_the_250k_limit_and_no_coverage_their_own_groups():
+    c = feature_claims(["1990-01-01T00:00:00.000Z"] * 8)
+    c["totalBuildingInsuranceCoverage"] = [0, 1, 50000, 50001, 150000, 249999, 250000, 500000]
+    out = bd.engineer_features(c)
+    assert out["coverage_band"].tolist() == ["No building coverage", "Up to $50k", "Up to $50k", "$50k-$100k", "$100k-$150k",
+                                             "$150k-$250k", "$250k", "Over $250k"]

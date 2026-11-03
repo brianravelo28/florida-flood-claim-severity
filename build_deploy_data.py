@@ -17,7 +17,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from constants import AGE_BINS, AGE_LABELS, ELEVATED_LABELS, EVENT_GROUPS, FLOOD_ORDER, MIN_CLAIMS, OCC_ORDER
+from constants import (AGE_BINS, AGE_LABELS, COVERAGE_LABELS, ELEVATED_LABELS, EVENT_GROUPS, FIRM_LABELS, FLOOD_ORDER, FLOOR_ORDER,
+                       MIN_CLAIMS, OCC_ORDER, PRIMARY_LABELS)
 
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data"
@@ -26,7 +27,7 @@ OUT = ROOT / "deploy_data"
 USECOLS = [
     "claimId", "yearOfLoss", "countyName", "latitude", "longitude", "occupancy_group", "flood_zone_group",
     "building_age_years", "building_age_missing", "building_age_display_years", "is_elevated", "amountPaid_real",
-    "event", "event_group",
+    "event", "event_group", "floors_group", "primary_residence", "firm_group", "coverage_band",
 ]
 
 
@@ -120,11 +121,16 @@ def main():
         "flood_zone_group": pd.Categorical(df["flood_zone_group"], categories=FLOOD_ORDER),
         "elevated": pd.Categorical(df["elevated"], categories=ELEVATED_LABELS),
         "age_band": pd.Categorical(df["age_band"], categories=AGE_LABELS),
+        "floors_group": pd.Categorical(df["floors_group"], categories=FLOOR_ORDER),
+        "primary_residence": pd.Categorical(df["primary_residence"], categories=PRIMARY_LABELS),
+        "firm_group": pd.Categorical(df["firm_group"], categories=FIRM_LABELS),
+        "coverage_band": pd.Categorical(df["coverage_band"], categories=COVERAGE_LABELS),
         "event": df["event"].astype("category"),
         "event_group": pd.Categorical(df["event_group"], categories=EVENT_GROUPS),
         "amountPaid_real": df["amountPaid_real"].astype("float32"),
     })
-    for col in ("occupancy_group", "flood_zone_group", "elevated", "age_band", "event_group"):
+    for col in ("occupancy_group", "flood_zone_group", "elevated", "age_band", "event_group", "floors_group", "primary_residence",
+                "firm_group", "coverage_band"):
         assert table[col].notna().all(), f"unmapped label in {col}"
     table.to_parquet(OUT / "claims.parquet", compression="snappy", index=False)
 

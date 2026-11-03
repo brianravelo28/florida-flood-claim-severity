@@ -28,7 +28,8 @@ def test_claim_counts_agree_across_files(claims):
 
 
 def test_claims_table_has_no_gaps_where_the_app_needs_values(claims):
-    for col in ("occupancy_group", "flood_zone_group", "elevated", "age_band", "event_group", "yearOfLoss", "amountPaid_real"):
+    for col in ("occupancy_group", "flood_zone_group", "elevated", "age_band", "event_group", "yearOfLoss", "amountPaid_real",
+                "floors_group", "primary_residence", "firm_group", "coverage_band"):
         assert claims[col].notna().all(), col
     assert (claims["amountPaid_real"] > 0).all()
     agg = load("aggregates.json")
@@ -82,3 +83,11 @@ def test_event_labels_follow_the_tidying_rules(claims):
     assert "Hurricane Georges" in events and not any("Georges (" in e for e in events)
     assert "Tropical Storm Alberto (1994)" in events and "Tropical Storm Alberto (2006)" in events
     assert "Tropical Storm Alberto" not in events
+
+
+def test_the_risk_factor_columns_cover_every_claim(claims):
+    from constants import FACTOR_COLUMNS
+    for name, (col, order) in FACTOR_COLUMNS.items():
+        assert col in claims.columns, name
+        assert set(claims[col].astype(str)) <= set(order), name
+    assert claims["coverage_band"].astype(str).value_counts().idxmax() == "$250k"

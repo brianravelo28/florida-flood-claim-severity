@@ -73,12 +73,23 @@ AXIS_SHORT_LABELS = {
     "A / AH / AO / AR / A99 (no base elevation, shallow, special)": "A / AH / AO...",
     "AE / A1-A30 (base elevation known)": "AE / A1-A30", "V / VE (velocity, coastal)": "V / VE",
     "Condo association": "Condo assoc.", "Unit in multi-unit building": "Multi-unit", "Non-residential": "Non-resid.",
+    "Three or more floors": "3+ floors", "Manufactured home or trailer on foundation": "Mfd. home / trailer",
+    "Townhouse, three or more floors": "Townhouse, 3+", "Not a primary residence": "Not primary",
+    "Built before the first flood map": "Before first map", "Built after the first flood map": "After first map",
+    "No building coverage": "None",
 }
 
 FACTOR_NOTES = {
     "Flood zone": None,
     "Occupancy type": "FEMA's legacy (1-4, 6) and newer (11-19) occupancy codes describe the same building types, so they are grouped together.",
     "Elevated building": None,
+    "Building floors": None,
+    "Primary residence": None,
+    "Building coverage": None,
+    "Built after first flood map": (
+        "FEMA counts a building as built after the first flood map (post-FIRM) when construction started after December 31, 1974 "
+        "or after the community's first Flood Insurance Rate Map, whichever is later. These buildings are newer, so the comparison "
+        "overlaps with building age."),
     "Building age": (
         f"Age at time of loss. About {REPORT['construction_year_unknown_pct']:.0f}% of buildings have an unusable construction date "
         f"({PLACEHOLDER_SHARE:.0f}% of them FEMA's 1492 placeholder, and every placeholder is flagged pre-FIRM, so they are probably old). "
@@ -361,7 +372,7 @@ def tab2_layout():
 def tab3_layout():
     return html.Div([
         html.Div([field("Compare payouts by", dcc.Dropdown(id="t3-factor", options=[{"label": k, "value": k} for k in FACTORS],
-                                                           value="Flood zone", clearable=False, searchable=False,
+                                                           value="Flood zone", clearable=False, searchable=len(FACTORS) >= 7,
                                                            style={"width": "300px"}))],
                  className="controls card"),
         html.Div([dcc.Graph(id="t3-chart", config={"displayModeBar": False}), html.Div(id="t3-note")],

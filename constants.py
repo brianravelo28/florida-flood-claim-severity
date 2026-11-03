@@ -23,10 +23,26 @@ FEMA_PULL_DATE = "2026-10-20"
 # Groups with fewer claims than this are flagged or left out of rankings and medians.
 MIN_CLAIMS = 30
 
-# factor name -> (column in the claims table, display order)
+# Building coverage: the policy's building limit. 40% of claims sit at exactly $250,000 and 2.6% have no building coverage,
+# so those get bands of their own.
+COVERAGE_BINS = [-1, 0, 50000, 100000, 150000, 249999, 250000, 1e12]
+COVERAGE_LABELS = ["No building coverage", "Up to $50k", "$50k-$100k", "$100k-$150k", "$150k-$250k", "$250k", "Over $250k"]
+
+# FEMA's numberOfFloorsInTheInsuredBuilding is a code, not a count (FEMA data dictionary).
+FLOOR_LABELS = {1: "One floor", 2: "Two floors", 3: "Three or more floors", 4: "Split-level",
+                5: "Manufactured home or trailer on foundation", 6: "Townhouse, three or more floors"}
+FLOOR_ORDER = list(FLOOR_LABELS.values()) + ["Not recorded"]
+PRIMARY_LABELS = ["Primary residence", "Not a primary residence"]
+FIRM_LABELS = ["Built before the first flood map", "Built after the first flood map"]
+
+# factor name -> (column in the claims table, display order); this is the order of the Risk Factors dropdown
 FACTOR_COLUMNS = {
     "Flood zone": ("flood_zone_group", FLOOD_ORDER),
     "Occupancy type": ("occupancy_group", OCC_ORDER),
+    "Building floors": ("floors_group", FLOOR_ORDER),
     "Elevated building": ("elevated", ELEVATED_LABELS),
     "Building age": ("age_band", AGE_LABELS),
+    "Built after first flood map": ("firm_group", FIRM_LABELS),
+    "Primary residence": ("primary_residence", PRIMARY_LABELS),
+    "Building coverage": ("coverage_band", COVERAGE_LABELS),
 }

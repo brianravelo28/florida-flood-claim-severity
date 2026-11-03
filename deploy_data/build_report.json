@@ -24,10 +24,11 @@
     "amountPaid > 0": true,
     "amountPaid_real > 0": true,
     "every claim has a flood zone group and an occupancy group": true,
+    "every claim has a coverage band": true,
     "all present county codes are valid FL FIPS": true,
     "missing lat/lon < 2%": true,
     "every claim has an event group": true
   },
   "final_rows": 311507,
-  "final_columns": 28
+  "final_columns": 33
 }

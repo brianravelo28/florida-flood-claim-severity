@@ -5,7 +5,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from constants import EVENT_MERGES, EVENT_NEEDS_YEAR, NAMED_STORM_PATTERN
+from constants import (COVERAGE_BINS, COVERAGE_LABELS, EVENT_MERGES, EVENT_NEEDS_YEAR, FIRM_LABELS, FLOOR_LABELS,
+                       NAMED_STORM_PATTERN, PRIMARY_LABELS)
 from fetch_data import fetch_cpi, fetch_fema
 
 ROOT = Path(__file__).parent
@@ -176,6 +177,10 @@ def engineer_features(c):
     # every claim, unlike the construction date.
     c["post_firm"] = c["postFIRMConstructionIndicator"].astype(str).str.lower().eq("true").astype(int)
     c["building_age_display_years"] = display_building_age(c)
+    c["firm_group"] = np.where(c["post_firm"] == 1, FIRM_LABELS[1], FIRM_LABELS[0])
+    c["floors_group"] = c["numberOfFloorsInTheInsuredBuilding"].map(FLOOR_LABELS).fillna("Not recorded")
+    c["primary_residence"] = np.where(c["primaryResidenceIndicator"].astype(str).str.lower().eq("true"), PRIMARY_LABELS[0], PRIMARY_LABELS[1])
+    c["coverage_band"] = pd.cut(c["totalBuildingInsuranceCoverage"], COVERAGE_BINS, labels=COVERAGE_LABELS).astype(str)
     c["flood_zone_encoded"], c["flood_zone_group"] = encode_flood_zone(c["ratedFloodZone"])
     c["occupancy_encoded"] = c["occupancyType"].fillna(0).astype(int)
     c["occupancy_label"] = c["occupancy_encoded"].map(OCCUPANCY_LABELS)
@@ -214,6 +219,7 @@ def validate(c):
         "amountPaid > 0": bool((c["amountPaid"] > 0).all()),
         "amountPaid_real > 0": bool((c["amountPaid_real"] > 0).all()),
         "every claim has a flood zone group and an occupancy group": bool(c[["flood_zone_group", "occupancy_group"]].notna().all().all()),
+        "every claim has a coverage band": bool(c["coverage_band"].isin(COVERAGE_LABELS).all()),
         "all present county codes are valid FL FIPS": bool(c.loc[c["countyCode"].notna(), "countyName"].ne("Unknown").all()),
         "missing lat/lon < 2%": report["missing_latlon_pct"] < 2,
         "every claim has an event group": bool(c["event_group"].notna().all()),
@@ -234,7 +240,8 @@ def main():
             "flood_zone_group", "occupancyType", "occupancy_label", "occupancy_group", "yearOfConstruction",
             "elevatedBuildingIndicator", "is_elevated", "post_firm", "amountPaidOnBuildingClaim", "amountPaidOnContentsClaim",
             "amountPaidOnIncreasedCostOfComplianceClaim", "amountPaid", "cpi_factor", "amountPaid_real",
-            "building_age_years", "building_age_missing", "building_age_display_years", "floodEvent", "event", "event_group"]
+            "building_age_years", "building_age_missing", "building_age_display_years", "floors_group", "primary_residence",
+            "firm_group", "totalBuildingInsuranceCoverage", "coverage_band", "floodEvent", "event", "event_group"]
     out = claims[[k for k in cols if k in claims]].rename(columns={"id": "claimId"})
     out["dateOfLoss"] = out["dateOfLoss"].dt.strftime("%Y-%m-%d")
     OUT_CSV.parent.mkdir(exist_ok=True)
