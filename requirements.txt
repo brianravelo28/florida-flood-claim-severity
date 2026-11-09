@@ -5,4 +5,4 @@ numpy==2.5.4
 pyarrow==26.0.0
 requests==2.34.2
 plotly==7.1.0
-dash==4.4.1
+dash==4.5.0
