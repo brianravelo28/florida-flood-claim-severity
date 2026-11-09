@@ -152,8 +152,8 @@ def _code(series):
     return series.astype("string").str.strip().str.replace(r"\.0$", "", regex=True)
 
 
-def label_risk_factors(c):
-    """Readable groups for the fields behind the Risk Factors tab, using FEMA's own code definitions."""
+def label_factors(c):
+    """Readable groups for the fields behind the Factors tab, using FEMA's own code definitions."""
     c["cause_group"] = _code(c["causeOfDamage"]).map(CAUSE_LABELS).fillna("Other or not recorded")
     depth = pd.to_numeric(c["waterDepth"], errors="coerce")
     c["depth_band"] = pd.cut(depth.where(depth >= 0), DEPTH_BINS, labels=DEPTH_LABELS).astype("string").fillna("Not recorded")
@@ -205,7 +205,7 @@ def engineer_features(c):
     c["occupancy_label"] = c["occupancy_encoded"].map(OCCUPANCY_LABELS)
     c["occupancy_group"] = c["occupancy_encoded"].map(OCCUPANCY_TO_GROUP)
     c["countyName"] = c["countyCode"].astype("Int64").map(FL_COUNTIES).fillna("Unknown")
-    return label_events(label_risk_factors(c))
+    return label_events(label_factors(c))
 
 
 def add_real_dollars(c):

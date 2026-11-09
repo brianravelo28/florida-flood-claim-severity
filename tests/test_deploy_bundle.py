@@ -86,7 +86,7 @@ def test_event_labels_follow_the_tidying_rules(claims):
     assert "Tropical Storm Alberto" not in events
 
 
-def test_the_risk_factor_columns_cover_every_claim(claims):
+def test_the_factor_columns_cover_every_claim(claims):
     from constants import FACTOR_COLUMNS
     for name, (col, order) in FACTOR_COLUMNS.items():
         assert col in claims.columns, name

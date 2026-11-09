@@ -94,7 +94,7 @@ def test_storms_tab_lists_alberto_with_its_years_and_one_georges():
 
 
 @pytest.mark.parametrize("factor", list(dash_app.FACTORS))
-def test_risk_factors_tab(factor):
+def test_factors_tab(factor):
     fig, table, note, extra = dash_app.update_tab3(*no_filters(), factor)
     assert fig.data and table is not None
     assert "Drag to zoom into part of the chart" in text_of(note), "every chart's About section carries the zoom tip"
@@ -155,7 +155,7 @@ def test_tables_get_no_zoom_tips():
     assert "Drag to" not in text_of(decades) and "About" not in text_of(decades), "the decade table has nothing to caution about"
 
 
-def test_the_risk_factor_dropdown_offers_the_new_factors_without_a_search_box():
+def test_the_factor_dropdown_offers_the_new_factors_without_a_search_box():
     assert list(dash_app.FACTORS) == [
         "Building age", "Building coverage", "Building deductible", "Building floors", "Built after first flood map",
         "Cause of flooding", "Elevated building", "Elevation vs base flood level", "Flood water depth", "Flood zone",
