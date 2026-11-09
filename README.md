@@ -8,19 +8,17 @@ An interactive dashboard of what Florida's federal flood-insurance claims have p
 
 **Headline.** In 2025 dollars, the median paid claim rose from about $4,800 in 1978-79 (4,077 claims) to about $78,000 in 2020-26 (124,593 claims). The 2020s include the Ian, Helene and Milton seasons; without those three storms' claims the 2020s median is about $42,500, still about 51% above the 2010s median of about $28,000. The figures cover claims that were paid, and about 30% of claims were closed without payment.
 
-## Who it is for
+## Who's this for?
 
-People who want to see what Florida flood claims pay and how that has changed: insurance and risk analysts, journalists and homeowners.
+Analysts, home buyers, and realtors
 
-## What the dashboard shows
+## What can it do?
 
-A shared filter bar (**Loss Years, County, Occupancy, Flood Zone**; empty means all) drives every tab. Every chart and table shows the number of claims behind it, and a count under 30 carries an asterisk.
+For example: how many flood claims did the federal program pay in Lee County between 1990 and 2000, and what did they cost?
 
-| Tab | What it shows |
-|---|---|
-| **Overview** | Claims, total paid and median claim by year of loss and by decade, plus a county map. |
-| **Storms** | FEMA's own event label for each claim: the named hurricanes and tropical storms ranked by claims, total paid or median claim (each with its year), and the other FEMA-labeled events. |
-| **Risk Factors** | Payout distributions, with a table of claims, share of claims, median, mean and middle 50%, for 13 factors: Building age, building coverage, building deductible, building floors, built after first flood map, cause of flooding, elevated building, elevation vs base flood level, flood water depth, flood zone, foundation type, occupancy type, primary residence. Building age also has a view within each decade of loss. |
+## How to use it?
+
+Set the filters at the top (**Loss Years, County, Occupancy, Flood Zone**) and the **Overview**, **Storms** and **Risk Factors** tabs update together. Every chart and table shows the number of claims behind it.
 
 ## Data
 
@@ -33,11 +31,11 @@ Payout is the building, contents and increased-cost-of-compliance payments added
 
 ## Reading the numbers
 
-- **Paid claims.** The figures describe what a claim cost once it was paid.
 - **Locations.** FEMA blurs coordinates to 0.1 degree (about 7 miles), so a point can fall in the wrong county; the county field is the reliable location.
-- **Associations.** The dashboard describes patterns in past claims. Payouts have grown much faster than inflation, and possible reasons include storm severity, rebuilding costs, coverage limits, claims handling and the mix of insured buildings.
-- **Building age and loss year move together.** The median building age at loss was 15 years in the 1980s, 38 in the 2010s and 50 in the 2020s, so larger payouts among older buildings may reflect when the claim happened. The Building age view compares ages within each decade.
-- **Event labels.** Storm names are FEMA's own labels, and a claim without a label can still be storm-related.
+- **Years.** A year is the year of loss, when the flood happened, not the year the claim was paid.
+- **Fields recorded for part of the claims.** Foundation type, elevation, deductible and water depth are "Not recorded" for different shares of each decade; foundation type, for example, is recorded for 97% of 2020-26 claims and almost none before 2000.
+- **Building age and loss year move together.** The median building age at loss was 15 years in the 1980s, 38 in the 2010s and 50 in the 2020s, so larger payouts among older buildings may reflect when the claim happened.
+- **Event labels.** Storm names are FEMA's own labels, but how consistently claims were labeled varies by decade (55% of 1978-79 claims carry a label, 97.5% of 2020-26 claims), so a claim without a label can still be storm-related.
 
 [docs/METHODOLOGY.md](docs/METHODOLOGY.md) lists every cleaning step with its counts and how each factor is grouped.
 
@@ -78,6 +76,6 @@ python -m pytest
 | `requirements.txt`, `requirements-dev.txt` | Dependencies for the pipeline and app, and for the tests |
 | `tests/`, `pytest.ini`, `.github/workflows/tests.yml` | The test suite and the workflow that runs it |
 | `deploy_data/` | What the hosted app loads |
-| `docs/METHODOLOGY.md` | Sources, cleaning, grouping, reading the numbers, reproducibility |
+| `docs/METHODOLOGY.md` | Sources, cleaning, grouping, reproducibility |
 
 Released under the MIT License.
