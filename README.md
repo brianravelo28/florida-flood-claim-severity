@@ -16,7 +16,11 @@ Analysts, home buyers, and realtors
 
 ## What can it do?
 
-It can answer: how many flood claims did the federal program pay in Lee County between 1990 and 2000 for single-family homes? How much did they cost?
+It can answer these questions:
+
+1. How many flood claims did the federal program pay in Lee County, Florida between 1990 and 2000 for single-family homes? How much did they cost?
+2. Which county has been the costliest?
+3. Which storm produced the most claims, and how much did they cost in total?
 
 ## How to use it?
 
