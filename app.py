@@ -6,7 +6,7 @@ A shared filter bar above the tabs (Loss Years, County, Occupancy, Flood Zone) d
 Tabs:
 1. Overview          claims, total paid and median claim by year of loss and by decade; county map
 2. Storms            the events FEMA labels on its claims, ranked by claims, dollars paid or median claim
-3. Risk Factors      how payouts differ by flood zone, occupancy, elevation and building age
+3. Factors           how payouts differ by flood zone, occupancy, elevation and building age
 
 Every chart and table shows the number of claims behind it; groups with fewer than MIN_CLAIMS claims are flagged or left out.
 
@@ -344,7 +344,7 @@ app.layout = html.Div(
         dcc.Tabs(
             id="tabs", value="tab1", colors={"border": BORDER, "primary": BLUE, "background": PAGE_BG},
             children=[dcc.Tab(label=lbl, value=val, style=TAB_STYLE, selected_style=TAB_SELECTED) for val, lbl in
-                      [("tab1", "Overview"), ("tab2", "Storms"), ("tab3", "Risk Factors")]],
+                      [("tab1", "Overview"), ("tab2", "Storms"), ("tab3", "Factors")]],
         ),
         html.Div(id="tab-content", style={"marginTop": "16px"}),
     ],

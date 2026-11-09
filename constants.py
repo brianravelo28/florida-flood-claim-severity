@@ -59,7 +59,7 @@ FOUNDATION_LABELS = {"1": "Slab", "2": "Basement", "3": "Crawlspace", "4": "Elev
                      "5": "Elevated with enclosure (post, pile or pier)", "6": "Elevated with enclosure (not post, pile or pier)"}
 FOUNDATION_ORDER = list(FOUNDATION_LABELS.values()) + ["Not recorded"]
 
-# factor name -> (column in the claims table, display order); the Risk Factors dropdown lists them alphabetically
+# factor name -> (column in the claims table, display order); the Factors dropdown lists them alphabetically
 _FACTORS = {
     "Flood zone": ("flood_zone_group", FLOOD_ORDER),
     "Occupancy type": ("occupancy_group", OCC_ORDER),
