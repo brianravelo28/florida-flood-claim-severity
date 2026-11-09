@@ -29,7 +29,7 @@ OpenFEMA data are published under OpenFEMA's terms of use. This project is not e
 
 **Payout.** A claim's payout is its building, contents and increased-cost-of-compliance payments added together; FEMA has no single total field.
 
-**Exclusions.** `build_dataset.py` logs every row it drops and why (`build_report.json`):
+**Exclusions.** `pipeline/build_dataset.py` logs every row it drops and why (`build_report.json`):
 
 | Step | Rows dropped | Remaining |
 |---|---|---|
@@ -161,7 +161,7 @@ The Loss Years filter narrows any of these to the years where the field is fille
 
 ## Reproducibility
 
-Run order (details in the README): `fetch_data.py`, `build_dataset.py`, `build_deploy_data.py`. The pipeline is deterministic: the same pull gives the same cleaned dataset and the same `deploy_data/`.
+Run order (details in the README): `pipeline/fetch_data.py`, `pipeline/build_dataset.py`, `pipeline/build_deploy_data.py`. The pipeline is deterministic: the same pull gives the same cleaned dataset and the same `deploy_data/`.
 
 **Data version.** The raw pull (about 16 MB) is kept outside the repository, and a new pull returns FEMA's current data. The SHA-256 of the cached pull behind these numbers, `data/raw/fema_nfip_claims_v3_fl.csv.gz` (pulled 2026-11-03), is `e0a913f3bc8d0ae41e59a34122c2701d2897312dd43bdfbccb7bd0dd4e941bc8`. The earlier 2026-10-20 pull, whose 23 fields all agree with it, is not the source of record.
 
@@ -171,7 +171,7 @@ Run order (details in the README): `fetch_data.py`, `build_dataset.py`, `build_d
 
 ## Deployment notes
 
-The hosted dashboard runs on Render's Starter plan (512 MB of RAM, kept awake). The service installs `requirements-render.txt` and serves `wsgi.py` with gunicorn 26.2.0 (one worker, four threads); `render.yaml` records these settings, and Render's dashboard controls the live service, with its settings taking precedence over the file.
+The hosted dashboard runs on Render's Starter plan (512 MB of RAM, kept awake). The service installs `requirements-render.txt` and serves `wsgi.py` with gunicorn 26.2.0 (one worker, four threads); `docs/render.yaml` records these settings, and Render's dashboard controls the live service, with its settings taking precedence over the file.
 
 The app holds all 311,507 paid claims as one compact table (4.0 MB on disk) and filters it live; the headline numbers are precomputed in `summary.json`. On Render the process uses about 160 MB after loading the app and about 205 MB after the three tabs have been opened (`/debugz` reports the live figure).
 
