@@ -186,6 +186,7 @@ body {{ margin: 0; background: {PAGE_BG}; color: {INK};
 .kpi .s {{ font-size: 15px; color: {INK_3}; margin-top: 2px; }}
 .controls {{ display: flex; flex-wrap: wrap; gap: 16px 20px; align-items: flex-end; }}
 .controls label {{ display: block; font-size: 15px; color: {INK_2}; margin-bottom: 4px; }}
+.dash-range-slider-input {{ font-size: 13px; height: 22px; }}
 .note {{ font-size: 15px; color: {INK_2}; line-height: 1.5; margin: 10px 2px 0; }}
 details.about {{ margin-top: 12px; }}
 details.about summary {{ cursor: pointer; font-weight: 600; color: {INK_2}; }}
