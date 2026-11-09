@@ -14,7 +14,7 @@ Analysts, home buyers, and realtors
 
 ## What can it do?
 
-For example: how many flood claims did the federal program pay in Lee County between 1990 and 2000, and what did they cost?
+It can answer: how many flood claims did the federal program pay in Lee County between 1990 and 2000 for single-family homes? How much did they cost?
 
 ## How to use it?
 
