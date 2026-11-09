@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import build_dataset as bd
+from pipeline import build_dataset as bd
 
 
 @pytest.fixture(autouse=True)

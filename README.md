@@ -48,13 +48,13 @@ Requires Python 3.13 or newer (the hosted dashboard runs on 3.14).
 ```bash
 pip install -r requirements.txt
 
-python fetch_data.py         # download and cache the raw data into data/raw/ (gitignored)
-python build_dataset.py      # clean, inflation-adjust, group and label the claims
-python build_deploy_data.py  # compact bundle for the app -> deploy_data/
-python app.py                # dashboard at http://localhost:8058
+python -m pipeline.fetch_data         # download and cache the raw data into data/raw/ (gitignored)
+python -m pipeline.build_dataset      # clean, inflation-adjust, group and label the claims
+python -m pipeline.build_deploy_data  # compact bundle for the app -> deploy_data/
+python app.py                         # dashboard at http://localhost:8058
 ```
 
-`deploy_data/` is committed, so the dashboard runs without any of the steps above. The hosted dashboard runs on Render with `wsgi.py` as its entry point; `render.yaml` records the service's settings for reference, and Render's dashboard controls the live service.
+`deploy_data/` is committed, so the dashboard runs without any of the steps above. The hosted dashboard runs on Render with `wsgi.py` as its entry point; `docs/render.yaml` records the service's settings for reference, and Render's dashboard controls the live service.
 
 ## Tests
 
@@ -69,12 +69,12 @@ python -m pytest
 
 | File | Purpose |
 |---|---|
-| `fetch_data.py` | Download and cache FEMA claims and CPI-U |
-| `build_dataset.py` | Cleaning, inflation adjustment, grouping, event labels, validation |
-| `build_deploy_data.py` | Packages the claims table and the headline numbers into `deploy_data/` |
+| `pipeline/fetch_data.py` | Download and cache FEMA claims and CPI-U |
+| `pipeline/build_dataset.py` | Cleaning, inflation adjustment, grouping, event labels, validation |
+| `pipeline/build_deploy_data.py` | Packages the claims table and the headline numbers into `deploy_data/` |
 | `constants.py` | Category labels, FEMA code definitions and thresholds shared by the pipeline and the app |
 | `app.py`, `wsgi.py` | The Dash dashboard and its hosting entry point |
-| `render.yaml`, `requirements-render.txt` | The hosted service's settings (for reference) and the hosted app's dependencies |
+| `docs/render.yaml`, `requirements-render.txt` | The hosted service's settings (for reference) and the hosted app's dependencies |
 | `requirements.txt`, `requirements-dev.txt` | Dependencies for the pipeline and app, and for the tests |
 | `tests/`, `pytest.ini`, `.github/workflows/tests.yml` | The test suite and the workflow that runs it |
 | `deploy_data/` | What the hosted app loads |

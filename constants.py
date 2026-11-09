@@ -1,4 +1,4 @@
-"""Category labels and thresholds shared by build_dataset.py, build_deploy_data.py (which computes the aggregates) and app.py."""
+"""Category labels and thresholds shared by pipeline/build_dataset.py, pipeline/build_deploy_data.py (which computes the aggregates) and app.py."""
 
 FLOOD_ORDER = ["X / B / C (moderate-minimal)", "A / AH / AO / AR / A99 (no base elevation, shallow, special)",
                "AE / A1-A30 (base elevation known)", "V / VE (velocity, coastal)", "D / unknown"]

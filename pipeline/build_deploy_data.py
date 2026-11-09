@@ -1,6 +1,6 @@
 """Build the compact deploy_data/ bundle the hosted dashboard loads.
 
-Run after build_dataset.py:   python build_deploy_data.py
+Run after build_dataset.py:   python -m pipeline.build_deploy_data
 
 Render's instance has 512 MB of RAM, so every static aggregate is computed here, once, instead of at app startup:
 
@@ -21,7 +21,7 @@ from constants import (AGE_BINS, AGE_LABELS, CAUSE_ORDER, COVERAGE_LABELS, DEDUC
                        ELEVATION_ORDER, EVENT_GROUPS, FIRM_LABELS, FLOOD_ORDER, FLOOR_ORDER, FOUNDATION_ORDER, MIN_CLAIMS, OCC_ORDER,
                        PRIMARY_LABELS)
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 OUT = ROOT / "deploy_data"
 

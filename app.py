@@ -11,7 +11,7 @@ Tabs:
 Every chart and table shows the number of claims behind it; groups with fewer than MIN_CLAIMS claims are flagged or left out.
 
 Run locally: python app.py   (port from $PORT, default 8058).  Hosted: gunicorn wsgi:application
-Data: deploy_data/ (built by build_deploy_data.py).
+Data: deploy_data/ (built by pipeline/build_deploy_data.py).
 """
 import json
 import os
