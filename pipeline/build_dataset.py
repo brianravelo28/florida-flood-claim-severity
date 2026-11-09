@@ -8,9 +8,9 @@ import pandas as pd
 from constants import (CAUSE_LABELS, COVERAGE_BINS, COVERAGE_LABELS, DEDUCTIBLE_LABELS, DEPTH_BINS, DEPTH_LABELS, ELEVATION_LABELS,
                        EVENT_MERGES, EVENT_NEEDS_YEAR, FIRM_LABELS, FLOOR_LABELS, FOUNDATION_LABELS, NAMED_STORM_PATTERN,
                        PRIMARY_LABELS)
-from fetch_data import fetch_cpi, fetch_fema
+from pipeline.fetch_data import fetch_cpi, fetch_fema
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).resolve().parent.parent
 OUT_CSV = ROOT / "data" / "insurance_clean.csv.gz"
 OUT_REPORT = ROOT / "data" / "build_report.json"
 

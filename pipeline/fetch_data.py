@@ -11,7 +11,7 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-RAW_DIR = Path(__file__).parent / "data" / "raw"
+RAW_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
 FEMA_CACHE = RAW_DIR / "fema_nfip_claims_v3_fl.csv.gz"
 CPI_CACHE = RAW_DIR / "cpi_u.csv"
 CPI_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL"
