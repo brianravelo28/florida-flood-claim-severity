@@ -325,7 +325,7 @@ def filter_bar():
             html.Div([
                 field("Loss Years", html.Div(dcc.RangeSlider(
                     id="f-years", min=YEAR_MIN, max=YEAR_MAX, step=1, value=[YEAR_MIN, YEAR_MAX], allowCross=False,
-                    marks={y: str(y) for y in range(1980, YEAR_MAX, 10)}), style={"width": "300px", "paddingBottom": "18px"})),
+                    marks={y: str(y) for y in range(1980, YEAR_MAX, 10)}), style={"width": "min(420px, calc(100vw - 80px))", "paddingBottom": "18px"})),  # Dash hides the typed-year boxes at 300px or less
                 field("County", multi("f-county", COUNTY_OPTIONS, "All counties", "240px")),
                 field("Occupancy", multi("f-occ", OCC_OPTIONS, "All types", "200px", searchable=False)),
                 field("Flood Zone", multi("f-flood", FLOOD_OPTIONS, "All zones", "200px", searchable=False)),
