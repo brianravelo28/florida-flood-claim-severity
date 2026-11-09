@@ -1,10 +1,18 @@
 # Methodology
 
-How the numbers in the README and the dashboard are produced. Every figure here comes from a file the pipeline writes (`deploy_data/summary.json`, `deploy_data/build_report.json`, `deploy_data/claims.parquet`) or from the constants in `constants.py`.
+Contents: [Terms](#terms) · [Data sources](#data-sources) · [Data and cleaning](#data-and-cleaning) · [Event labels](#event-labels) · [Payouts over time](#payouts-over-time) · [Factors](#factors) · [Reproducibility](#reproducibility) · [Deployment notes](#deployment-notes)
 
-**Terms.** NFIP is the National Flood Insurance Program, run by FEMA (the Federal Emergency Management Agency), which publishes its claims through OpenFEMA. CPI-U is the Consumer Price Index for All Urban Consumers, used to put payouts in constant dollars. A FIRM is a community's Flood Insurance Rate Map; FEMA calls a building "post-FIRM" when construction started after December 31, 1974 or after the community's first FIRM, whichever is later. The base flood elevation is the flood level with a 1% chance of being reached in any year, used to rate a building. A median is the middle value: half of the claims are larger and half are smaller.
+## Terms
 
-Contents: [Data sources](#data-sources) · [Data and cleaning](#data-and-cleaning) · [Event labels](#event-labels) · [Payouts over time](#payouts-over-time) · [Factors](#factors) · [Reproducibility](#reproducibility) · [Deployment notes](#deployment-notes)
+| Term | Meaning |
+|---|---|
+| NFIP | The National Flood Insurance Program, run by FEMA (the Federal Emergency Management Agency). |
+| OpenFEMA | FEMA's open data service, where it publishes NFIP claims. |
+| CPI-U | The Consumer Price Index for All Urban Consumers, used to put payouts in constant dollars. |
+| FIRM | A community's Flood Insurance Rate Map. |
+| Post-FIRM | FEMA's label for a building whose construction started after December 31, 1974 or after the community's first FIRM, whichever is later. |
+| Base flood elevation | The flood level with a 1% chance of being reached in any year, used to rate a building. |
+| Median | The middle value: half of the claims are larger and half are smaller. |
 
 ## Data sources
 
