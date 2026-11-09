@@ -393,5 +393,111 @@
     "2010": 38.0,
     "2020": 50.0
   },
-  "duplicates_kept": 996
+  "duplicates_kept": 996,
+  "findings": {
+    "decade_2020s": {
+      "pct_claims": 40.0,
+      "pct_paid": 61.1
+    },
+    "top_loss_years_by_paid": [
+      {
+        "year": 2024,
+        "paid": 8025167114.069866,
+        "pct_paid": 33.7
+      },
+      {
+        "year": 2022,
+        "paid": 5381451476.230186,
+        "pct_paid": 22.6
+      }
+    ],
+    "top_two_years_pct_paid": 56.4,
+    "costliest_events": [
+      {
+        "event": "Hurricane Helene",
+        "year": 2024,
+        "claims": 49037,
+        "total_paid": 6600471486.300517
+      },
+      {
+        "event": "Hurricane Ian",
+        "year": 2022,
+        "claims": 38111,
+        "total_paid": 5293042961.732334
+      }
+    ],
+    "water_depth": {
+      "claims_with_depth": 286547,
+      "pct_up_to_6_in": 90.2,
+      "by_band": {
+        "0 in": {
+          "claims": 104521,
+          "median": 17178.720703125
+        },
+        "1-6 in": {
+          "claims": 153837,
+          "median": 43058.19921875
+        },
+        "7-12 in": {
+          "claims": 11097,
+          "median": 64890.62109375
+        },
+        "13-36 in": {
+          "claims": 9389,
+          "median": 69226.0390625
+        },
+        "Over 36 in": {
+          "claims": 7703,
+          "median": 66137.1015625
+        }
+      }
+    },
+    "elevated_by_decade": {
+      "1990": {
+        "Not elevated": {
+          "claims": 54369,
+          "median": 14745.8603515625
+        },
+        "Elevated": {
+          "claims": 6955,
+          "median": 9766.7099609375
+        }
+      },
+      "2000": {
+        "Not elevated": {
+          "claims": 49119,
+          "median": 21380.119140625
+        },
+        "Elevated": {
+          "claims": 14825,
+          "median": 14359.25
+        }
+      },
+      "2010": {
+        "Not elevated": {
+          "claims": 28987,
+          "median": 35473.0703125
+        },
+        "Elevated": {
+          "claims": 10957,
+          "median": 15650.0400390625
+        }
+      },
+      "2020": {
+        "Not elevated": {
+          "claims": 103107,
+          "median": 92729.671875
+        },
+        "Elevated": {
+          "claims": 21486,
+          "median": 16317.18505859375
+        }
+      }
+    },
+    "moderate_minimal_zone": {
+      "claims": 39545,
+      "pct_claims": 12.7,
+      "median": 19622.380859375
+    }
+  }
 }

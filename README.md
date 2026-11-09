@@ -41,6 +41,13 @@ Payout is the building, contents and increased-cost-of-compliance payments added
 
 [docs/METHODOLOGY.md](docs/METHODOLOGY.md) lists every cleaning step with its counts and how each factor is grouped.
 
+## What the data shows
+
+- **A few seasons carry most of the dollars.** The 2020s hold 40% of all claims (124,593) but 61% of the dollars. Loss years 2022 and 2024 alone account for about 56% of everything paid since 1978. Hurricane Helene (2024) and Hurricane Ian (2022) are the two costliest events, at $6.6 billion and $5.3 billion.
+- **Most claims involve shallow water.** 90% of claims with a recorded water depth involve 6 inches or less. The median payout rises with depth: $17,179 at 0 inches (104,521 claims), $43,058 at 1-6 inches (153,837), and about $65,000 to $69,000 beyond 6 inches (28,189). FEMA notes that some depths were recorded in feet.
+- **Elevated buildings have lower median payouts in each decade from the 1990s.** In the 2020s the median is $16,317 for elevated buildings (21,486 claims) and $92,730 for the rest (103,107). The same gap shows in the 1990s, 2000s and 2010s.
+- **One claim in eight comes from a moderate-to-minimal-risk flood zone.** Zones X / B / C account for 12.7% of claims (39,545), with a median payout of $19,622.
+
 ## Run it
 
 Requires Python 3.13 or newer (the hosted dashboard runs on 3.14).

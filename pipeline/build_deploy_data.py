@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from constants import (AGE_BINS, AGE_LABELS, CAUSE_ORDER, COVERAGE_LABELS, DEDUCTIBLE_ORDER, DEPTH_ORDER, ELEVATED_LABELS,
+from constants import (AGE_BINS, AGE_LABELS, CAUSE_ORDER, COVERAGE_LABELS, DEDUCTIBLE_ORDER, DEPTH_LABELS, DEPTH_ORDER, ELEVATED_LABELS,
                        ELEVATION_ORDER, EVENT_GROUPS, FIRM_LABELS, FLOOD_ORDER, FLOOR_ORDER, FOUNDATION_ORDER, MIN_CLAIMS, OCC_ORDER,
                        PRIMARY_LABELS)
 
@@ -98,7 +98,42 @@ def summarize(df, table, report):
     kdec = (known["yearOfLoss"] // 10) * 10
     out["median_building_age_at_loss_by_decade"] = {int(d): float(g.median()) for d, g in known["building_age_years"].groupby(kdec)}
     out["duplicates_kept"] = report["rows_identical_to_an_earlier_row_except_id"]
+    out["findings"] = findings(table, pay, year, decade)
     return out
+
+
+def findings(table, pay, year, decade):
+    """The figures quoted in the README's "What the data shows" section."""
+    total = float(pay.sum())
+    d20 = decade == 2020
+    paid_by_year = pay.groupby(year).sum().sort_values(ascending=False)
+    event = table["event"].astype("string")
+    by_event = pay.groupby(event).agg(total="sum", claims="size")
+    by_event["year"] = year.groupby(event).min()
+    costliest = by_event.sort_values("total", ascending=False).head(2)
+    depth = table["depth_band"].astype(str)
+    recorded = depth != "Not recorded"
+    zone = table["flood_zone_group"].astype(str) == FLOOD_ORDER[0]
+    elevated = table["elevated"].astype(str)
+    return {
+        "decade_2020s": {"pct_claims": round(100 * float(d20.mean()), 1), "pct_paid": round(100 * float(pay[d20].sum()) / total, 1)},
+        "top_loss_years_by_paid": [{"year": int(y), "paid": float(v), "pct_paid": round(100 * float(v) / total, 1)}
+                                   for y, v in paid_by_year.head(2).items()],
+        "top_two_years_pct_paid": round(100 * float(paid_by_year.head(2).sum()) / total, 1),
+        "costliest_events": [{"event": str(k), "year": int(r["year"]), "claims": int(r["claims"]), "total_paid": float(r["total"])}
+                             for k, r in costliest.iterrows()],
+        "water_depth": {
+            "claims_with_depth": int(recorded.sum()),
+            "pct_up_to_6_in": round(100 * float(depth.isin(DEPTH_LABELS[:2]).sum() / recorded.sum()), 1),
+            "by_band": {b: {"claims": int((depth == b).sum()), "median": float(pay[depth == b].median())} for b in DEPTH_LABELS},
+        },
+        "elevated_by_decade": {
+            int(d): {lab: {"claims": int(((decade == d) & (elevated == lab)).sum()),
+                           "median": float(pay[(decade == d) & (elevated == lab)].median())} for lab in ELEVATED_LABELS}
+            for d in (1990, 2000, 2010, 2020)},
+        "moderate_minimal_zone": {"claims": int(zone.sum()), "pct_claims": round(100 * float(zone.mean()), 1),
+                                  "median": float(pay[zone].median())},
+    }
 
 
 def main():

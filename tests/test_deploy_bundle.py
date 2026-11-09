@@ -100,3 +100,33 @@ def test_the_new_factors_have_the_expected_shape(claims):
     assert claims["foundation_group"].astype(str).value_counts().idxmax() == "Not recorded"
     assert (claims["depth_band"].astype(str) == "Not recorded").mean() < 0.15
     assert claims.loc[claims["yearOfLoss"] >= 2020, "foundation_group"].astype(str).eq("Not recorded").mean() < 0.1
+
+
+def test_the_findings_match_the_claims_table(claims):
+    f = load("summary.json")["findings"]
+    pay = claims["amountPaid_real"].astype("float64")
+    year, decade = claims["yearOfLoss"], (claims["yearOfLoss"] // 10) * 10
+    d20 = decade == 2020
+    assert f["decade_2020s"]["pct_claims"] == pytest.approx(100 * d20.mean(), abs=0.05)
+    assert f["decade_2020s"]["pct_paid"] == pytest.approx(100 * pay[d20].sum() / pay.sum(), abs=0.05)
+    by_year = pay.groupby(year).sum().sort_values(ascending=False)
+    assert [r["year"] for r in f["top_loss_years_by_paid"]] == list(by_year.index[:2])
+    assert f["top_two_years_pct_paid"] == pytest.approx(100 * by_year.iloc[:2].sum() / pay.sum(), abs=0.05)
+    by_event = pay.groupby(claims["event"].astype("string")).sum().sort_values(ascending=False)
+    assert [r["event"] for r in f["costliest_events"]] == list(by_event.index[:2])
+    depth = claims["depth_band"].astype(str)
+    recorded = depth != "Not recorded"
+    wd = f["water_depth"]
+    assert wd["claims_with_depth"] == recorded.sum() == sum(b["claims"] for b in wd["by_band"].values())
+    assert wd["pct_up_to_6_in"] == pytest.approx(100 * depth.isin(["0 in", "1-6 in"]).sum() / recorded.sum(), abs=0.05)
+    for band, row in wd["by_band"].items():
+        assert row["median"] == pytest.approx(pay[depth == band].median())
+    elevated = claims["elevated"].astype(str)
+    for d, rows in f["elevated_by_decade"].items():
+        for label, row in rows.items():
+            sel = (decade == int(d)) & (elevated == label)
+            assert row["claims"] == sel.sum() and row["median"] == pytest.approx(pay[sel].median())
+        assert rows["Elevated"]["median"] < rows["Not elevated"]["median"], f"elevated buildings pay less in the {d}s"
+    zone = claims["flood_zone_group"].astype(str).str.startswith("X / B / C")
+    assert f["moderate_minimal_zone"]["claims"] == zone.sum()
+    assert f["moderate_minimal_zone"]["median"] == pytest.approx(pay[zone].median())
