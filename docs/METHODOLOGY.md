@@ -4,7 +4,7 @@ How the numbers in the README and the dashboard are produced. Every figure here 
 
 **Terms.** NFIP is the National Flood Insurance Program, run by FEMA (the Federal Emergency Management Agency), which publishes its claims through OpenFEMA. CPI-U is the Consumer Price Index for All Urban Consumers, used to put payouts in constant dollars. A FIRM is a community's Flood Insurance Rate Map; FEMA calls a building "post-FIRM" when construction started after December 31, 1974 or after the community's first FIRM, whichever is later. The base flood elevation is the flood level with a 1% chance of being reached in any year, used to rate a building. A median is the middle value: half of the claims are larger and half are smaller.
 
-Contents: [Data sources](#data-sources) · [Data and cleaning](#data-and-cleaning) · [Event labels](#event-labels) · [Payouts over time](#payouts-over-time) · [Risk factors](#risk-factors) · [Reproducibility](#reproducibility) · [Deployment notes](#deployment-notes)
+Contents: [Data sources](#data-sources) · [Data and cleaning](#data-and-cleaning) · [Event labels](#event-labels) · [Payouts over time](#payouts-over-time) · [Factors](#factors) · [Reproducibility](#reproducibility) · [Deployment notes](#deployment-notes)
 
 ## Data sources
 
@@ -104,9 +104,9 @@ The ten named storms with the most claims:
 
 CPI-U puts claims from different years on one price level. Payouts have grown much faster than that: the data show the growth, and possible reasons include storm severity, rebuilding costs rising faster than CPI-U, larger coverage limits, changes in claims handling and a different mix of insured buildings.
 
-## Risk factors
+## Factors
 
-The Risk Factors tab compares payouts across 13 factors. Each shows a box for the middle 50% of claims with whiskers at the 10th and 90th percentiles, and a table of claims, share of claims, median, mean and middle 50%. Codes are labeled from the OpenFEMA data dictionary for `NfipClaims`.
+The Factors tab compares payouts across 13 factors. Each shows a box for the middle 50% of claims with whiskers at the 10th and 90th percentiles, and a table of claims, share of claims, median, mean and middle 50%. Codes are labeled from the OpenFEMA data dictionary for `NfipClaims`.
 
 | Factor | FEMA field | Groups |
 |---|---|---|
@@ -159,7 +159,7 @@ Run order (details in the README): `fetch_data.py`, `build_dataset.py`, `build_d
 
 **Software.** Python 3.14 with pandas 3.1.0, NumPy 2.5.4, PyArrow 26.0.0, Requests 2.34.2, Plotly 7.1.0 and Dash 4.4.1; CI runs the tests on Python 3.13 and 3.14. The cleaned dataset is identical on the earlier pinned versions (pandas 2.0.3, NumPy 1.24.3) and on these.
 
-**Tests.** `tests/` holds about 70 tests on small hand-built examples and on the committed bundle: the exclusion counts and payout sum, the inflation adjustment, the event labels, the grouping of every risk factor, the consistency of `deploy_data/`, and every dashboard callback, including empty filters.
+**Tests.** `tests/` holds about 70 tests on small hand-built examples and on the committed bundle: the exclusion counts and payout sum, the inflation adjustment, the event labels, the grouping of every factor, the consistency of `deploy_data/`, and every dashboard callback, including empty filters.
 
 ## Deployment notes
 

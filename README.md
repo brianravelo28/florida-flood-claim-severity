@@ -20,7 +20,7 @@ It can answer: how many flood claims did the federal program pay in Lee County b
 
 ## How to use it?
 
-Set the filters at the top (**Loss Years, County, Occupancy, Flood Zone**) and the **Overview**, **Storms** and **Risk Factors** tabs update together. Every chart and table shows the number of claims behind it.
+Set the filters at the top (**Loss Years, County, Occupancy, Flood Zone**) and the **Overview**, **Storms** and **Factors** tabs update together. Every chart and table shows the number of claims behind it.
 
 ## Data
 
@@ -58,7 +58,7 @@ python app.py                # dashboard at http://localhost:8058
 
 ## Tests
 
-About 70 tests run in under half a minute with no network access, and on every push through GitHub Actions (Python 3.13 and 3.14). They check the cleaning counts and the payout sum, the inflation adjustment, the event labels, the grouping of every Risk Factors variable, the consistency of the committed `deploy_data/`, and that every dashboard callback returns, including when a filter matches no claims.
+About 70 tests run in under half a minute with no network access, and on every push through GitHub Actions (Python 3.13 and 3.14). They check the cleaning counts and the payout sum, the inflation adjustment, the event labels, the grouping of every factor, the consistency of the committed `deploy_data/`, and that every dashboard callback returns, including when a filter matches no claims.
 
 ```bash
 pip install -r requirements.txt -r requirements-dev.txt
