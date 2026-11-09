@@ -4,7 +4,9 @@
 
 An interactive dashboard of what Florida's federal flood-insurance claims have paid since 1978, and which building and location factors go with larger payouts. Every payout is in constant 2025 dollars, so a 1992 claim and a 2024 claim can be compared.
 
-**Live dashboard: https://florida-flood-claim-severity.onrender.com/**
+## Live dashboard
+
+https://florida-flood-claim-severity.onrender.com/
 
 ## Headline
 
