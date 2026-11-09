@@ -18,9 +18,9 @@ Analysts, home buyers, and realtors
 
 It can answer these questions:
 
-1. How many flood claims did the federal program pay in Lee County, Florida between 1990 and 2000 for single-family homes? How much did they cost?
-2. Which county has been the costliest?
-3. Which storm produced the most claims, and how much did they cost in total?
+1. How many flood claims did the federal program pay in Lee County between 1990 and 2000 for single-family homes? How much did they cost?
+2. How many named storms affected Orange County from 1978 to 2026? What was the median claim by storm?
+3. How does the median claim differ by flood zone in Palm Beach County between 2010 and 2026?
 
 ## How to use it?
 
