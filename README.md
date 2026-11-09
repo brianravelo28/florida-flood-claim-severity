@@ -2,11 +2,15 @@
 
 ![Florida Flood Claim Severity dashboard](docs/screenshot.png)
 
+## Live Dashboard
+
+https://florida-flood-claim-severity.onrender.com/
+
 An interactive dashboard of what Florida's federal flood-insurance claims have paid since 1978, and which building and location factors go with larger payouts. Every payout is in constant 2025 dollars, so a 1992 claim and a 2024 claim can be compared.
 
-**Live dashboard: https://florida-flood-claim-severity.onrender.com/**
+## Headline
 
-**Headline.** In 2025 dollars, the median paid claim rose from about $4,800 in 1978-79 (4,077 claims) to about $78,000 in 2020-26 (124,593 claims). The 2020s include the Ian, Helene and Milton seasons; without those three storms' claims the 2020s median is about $42,500, still about 51% above the 2010s median of about $28,000. The figures cover claims that were paid, and about 30% of claims were closed without payment.
+In 2025 dollars, the median paid claim rose from about $4,800 in 1978-79 (4,077 claims) to about $78,000 in 2020-26 (124,593 claims). The 2020s include the Ian, Helene and Milton seasons; without those three storms' claims the 2020s median is about $42,500, still about 51% above the 2010s median of about $28,000. The figures cover claims that were paid, and about 30% of claims were closed without payment.
 
 ## Who's this for?
 
@@ -14,7 +18,7 @@ Analysts, home buyers, and realtors
 
 ## What can it do?
 
-For example: how many flood claims did the federal program pay in Lee County between 1990 and 2000, and what did they cost?
+It can answer: how many flood claims did the federal program pay in Lee County between 1990 and 2000 for single-family homes? How much did they cost?
 
 ## How to use it?
 
