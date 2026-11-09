@@ -1,4 +1,5 @@
 """Every dashboard callback returns without error on the committed data (default, filtered and empty inputs)."""
+import re
 import pytest
 
 dash_app = pytest.importorskip("app")
@@ -183,3 +184,9 @@ def test_charts_with_many_groups_use_short_claim_counts_under_their_labels():
     assert "67k" in " ".join(labels) and "Claims in each group" in fig.layout.xaxis.title.text
     few = dash_app.update_tab3(*no_filters(), "Primary residence")[0]
     assert all(label.endswith("claims") for label in few.data[0].x)
+
+
+def test_the_year_slider_is_wide_enough_to_show_its_typed_year_boxes():
+    # Dash hides the From and To year boxes when the slider is 300px wide or narrower
+    wrapper = next(c for c in dash_app.filter_bar()._traverse() if getattr(getattr(c, "children", None), "id", None) == "f-years")
+    assert int(re.match(r"min\((\d+)px", wrapper.style["width"]).group(1)) > 300
