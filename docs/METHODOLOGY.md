@@ -4,7 +4,7 @@ How the numbers in the README and the dashboard are produced. Every figure here 
 
 **Terms.** NFIP is the National Flood Insurance Program, run by FEMA (the Federal Emergency Management Agency), which publishes its claims through OpenFEMA. CPI-U is the Consumer Price Index for All Urban Consumers, used to put payouts in constant dollars. A FIRM is a community's Flood Insurance Rate Map; FEMA calls a building "post-FIRM" when construction started after December 31, 1974 or after the community's first FIRM, whichever is later. The base flood elevation is the flood level with a 1% chance of being reached in any year, used to rate a building. A median is the middle value: half of the claims are larger and half are smaller.
 
-Contents: [Data sources](#data-sources) · [Data and cleaning](#data-and-cleaning) · [Event labels](#event-labels) · [Payouts over time](#payouts-over-time) · [Risk factors](#risk-factors) · [Reading the numbers](#reading-the-numbers) · [Reproducibility](#reproducibility) · [Deployment notes](#deployment-notes)
+Contents: [Data sources](#data-sources) · [Data and cleaning](#data-and-cleaning) · [Event labels](#event-labels) · [Payouts over time](#payouts-over-time) · [Risk factors](#risk-factors) · [Reproducibility](#reproducibility) · [Deployment notes](#deployment-notes)
 
 ## Data sources
 
@@ -150,15 +150,6 @@ The Loss Years filter narrows any of these to the years where the field is fille
 **Building age and loss year.** The median building age at loss (buildings with known dates) was 15 years in the 1980s, 22 in the 1990s, 28 in the 2000s, 38 in the 2010s and 50 in the 2020s, and payouts rose over the same period. The Building age view therefore also draws one line per decade of loss, so a building's age is compared with others of the same era. The first-flood-map factor overlaps with building age for the same reason.
 
 **Small groups.** A claim count under 30 carries an asterisk in every table and in the year chart's hover text. The charts draw groups with 30 or more claims, and the by-decade building-age lines use points with 30 or more claims.
-
-## Reading the numbers
-
-- **Paid claims.** The figures describe the cost of a claim once it was paid.
-- **Locations.** Coordinates are blurred to about 7 miles, and the county field is the reliable location.
-- **Associations.** The dashboard describes patterns in past claims. Several factors move together (building age, the first-flood-map indicator and loss year; coverage and building value), so a gap between two groups can reflect a third characteristic.
-- **Payout growth.** The growth beyond inflation has several possible reasons (see Payouts over time).
-- **Event labels.** Storm names are FEMA's own labels, uneven from year to year, so totals for older events cover their labeled claims.
-- **Fields recorded for part of the claims.** Foundation type, elevation, deductible and water depth are filled in for different shares of each decade (see Risk factors).
 
 ## Reproducibility
 
