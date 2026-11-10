@@ -229,7 +229,7 @@ Run order (details in the README): `pipeline/fetch_data.py`, `pipeline/build_dat
 
 **Data version.** The raw pull (about 16 MB) is kept outside the repository, and a new pull returns FEMA's current data. The SHA-256 of the cached pull behind these numbers, `data/raw/fema_nfip_claims_v3_fl.csv.gz` (pulled 2026-11-10), is `110da8a87aefdcb69c8131457186c1ecf085d8e30da4f8b45c173722b429be51`. The earlier pulls of 2026-10-20 and 2026-11-03, whose 23 and 28 fields all agree with it, are not the source of record.
 
-**Software.** Python 3.14 with pandas 3.1.0, NumPy 2.5.4, PyArrow 26.0.0, Requests 2.34.2, Plotly 7.1.0 and Dash 4.5.0; CI runs the tests on Python 3.13 and 3.14. The cleaned dataset is identical on the earlier pinned versions (pandas 2.0.3, NumPy 1.24.3) and on these.
+**Software.** Python 3.14 with pandas 3.1.1, NumPy 2.5.4, PyArrow 26.0.1, Requests 2.34.2, Plotly 7.1.0 and Dash 4.5.0; CI runs the tests on Python 3.13 and 3.14. The cleaned dataset is identical on the earlier pinned versions (pandas 2.0.3, NumPy 1.24.3) and on these.
 
 **Tests.** `tests/` holds more than 80 tests on small hand-built examples and on the committed bundle: the exclusion counts and payout sum, the inflation adjustment and its construction-cost alternatives, the storm-level intervals, the event labels, the grouping of every factor, the consistency of `deploy_data/`, and every dashboard callback, including empty filters.
 
