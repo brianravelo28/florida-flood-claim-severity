@@ -231,7 +231,7 @@ Run order (details in the README): `pipeline/fetch_data.py`, `pipeline/build_dat
 
 **Software.** Python 3.14 with pandas 3.1.1, NumPy 2.5.4, PyArrow 26.0.1, Requests 2.34.2, Plotly 7.1.0 and Dash 4.5.0; CI runs the tests on Python 3.13 and 3.14. The cleaned dataset is identical on the earlier pinned versions (pandas 2.0.3, NumPy 1.24.3) and on these.
 
-**Tests.** `tests/` holds more than 80 tests on small hand-built examples and on the committed bundle: the exclusion counts and payout sum, the inflation adjustment and its construction-cost alternatives, the storm-level intervals, the event labels, the grouping of every factor, the consistency of `deploy_data/`, and every dashboard callback, including empty filters.
+**Tests.** `tests/` holds more than 90 tests on small hand-built examples and on the committed bundle: the exclusion counts and payout sum, the inflation adjustment and its construction-cost alternatives, the storm-level intervals, the event labels, the grouping of every factor, the consistency of `deploy_data/`, and every dashboard callback, including empty filters.
 
 ## Deployment notes
 
