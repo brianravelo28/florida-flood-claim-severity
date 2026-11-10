@@ -4,11 +4,11 @@
 
 https://florida-flood-claim-severity.onrender.com/
 
-An interactive dashboard of what Florida's federal flood-insurance claims have paid since 1978, and which building and location factors go with larger payouts. Every payout is in constant 2025 dollars, so a 1992 claim and a 2024 claim can be compared.
+An interactive dashboard of what Florida's real federal flood-insurance claims have paid since 1978, and which building and location factors go with larger payouts. Every payout is in constant 2025 dollars, so a 1992 claim and a 2024 claim can be compared.
 
 ## Headline
 
-In 2025 dollars, the median paid claim rose from about $4,800 in 1978-79 (4,077 claims) to about $78,000 in 2020-26 (124,593 claims). The 2020s include the Ian, Helene and Milton seasons; without those three storms' claims the 2020s median is about $42,500, still about 51% above the 2010s median of about $28,000. The figures cover claims that were paid, and about 30% of claims were closed without payment.
+In 2025 dollars, the median paid claim rose from about $4,800 in 1978-79 (4,077 claims) to about $78,000 in 2020-26 (124,593 claims). The 2020s include the Ian, Helene and Milton seasons; without those three storms' claims the 2020s median is about $42,500, compared with about $28,000 in the 2010s. The figures cover claims that were paid, and about 30% of claims were closed without payment.
 
 ## Who's this for?
 
@@ -30,7 +30,7 @@ Set the filters at the top (**Loss Years, County, Occupancy, Flood Zone**) and t
 
 | Source | What |
 |---|---|
-| [OpenFEMA NFIP Redacted Claims, v3](https://www.fema.gov/openfema-data-page/nfip-redacted-claims-v3) | 448,618 Florida claims, pulled 2026-11-03 (FEMA last refreshed the dataset on 2026-09-09). NFIP is the National Flood Insurance Program, run by FEMA, the Federal Emergency Management Agency. |
+| [OpenFEMA NFIP Redacted Claims, v3](https://www.fema.gov/openfema-data-page/nfip-redacted-claims-v3) | 448,618 Florida claims, pulled 2026-11-10 (FEMA last refreshed the dataset on 2026-09-09). NFIP is the National Flood Insurance Program, run by FEMA, the Federal Emergency Management Agency. |
 | [FRED CPIAUCSL](https://fred.stlouisfed.org/series/CPIAUCSL) | CPI-U (Consumer Price Index for All Urban Consumers), for the inflation adjustment to 2025 dollars. |
 
 Payout is the building, contents and increased-cost-of-compliance payments added together. After cleaning, the dashboard covers 311,507 paid claims totaling $23.79 billion. 88.3% of them carry a FEMA event label, and 75.9% name a hurricane or tropical storm.
@@ -69,7 +69,7 @@ python app.py                         # dashboard at http://localhost:8058
 
 ## Tests
 
-About 70 tests run in under half a minute with no network access, and on every push through GitHub Actions (Python 3.13 and 3.14). They check the cleaning counts and the payout sum, the inflation adjustment, the event labels, the grouping of every factor, the consistency of the committed `deploy_data/`, and that every dashboard callback returns, including when a filter matches no claims.
+More than 90 tests run in under half a minute with no network access, and on every push through GitHub Actions (Python 3.13 and 3.14), so a change to the cleaning, the grouping, a quoted figure or a dashboard callback shows up before it ships. They check the cleaning counts and the payout sum, the inflation adjustment, the event labels, the grouping of every factor, the consistency of the committed `deploy_data/`, and that every dashboard callback returns, including when a filter matches no claims. Page appearance and the hosted service are checked by hand after each deploy.
 
 ```bash
 pip install -r requirements.txt -r requirements-dev.txt
