@@ -4,7 +4,7 @@
 
 https://florida-flood-claim-severity.onrender.com/
 
-An interactive dashboard of what Florida's federal flood-insurance claims have paid since 1978, and which building and location factors go with larger payouts. Every payout is in constant 2025 dollars, so a 1992 claim and a 2024 claim can be compared.
+An interactive dashboard of what Florida's real federal flood-insurance claims have paid since 1978, and which building and location factors go with larger payouts. Every payout is in constant 2025 dollars, so a 1992 claim and a 2024 claim can be compared.
 
 ## Headline
 
@@ -69,7 +69,7 @@ python app.py                         # dashboard at http://localhost:8058
 
 ## Tests
 
-About 70 tests run in under half a minute with no network access, and on every push through GitHub Actions (Python 3.13 and 3.14). They check the cleaning counts and the payout sum, the inflation adjustment, the event labels, the grouping of every factor, the consistency of the committed `deploy_data/`, and that every dashboard callback returns, including when a filter matches no claims.
+More than 70 tests run in under half a minute with no network access, and on every push through GitHub Actions (Python 3.13 and 3.14), so a change to the cleaning, the grouping, a quoted figure or a dashboard callback shows up before it ships. They check the cleaning counts and the payout sum, the inflation adjustment, the event labels, the grouping of every factor, the consistency of the committed `deploy_data/`, and that every dashboard callback returns, including when a filter matches no claims. Page appearance and the hosted service are checked by hand after each deploy.
 
 ```bash
 pip install -r requirements.txt -r requirements-dev.txt
