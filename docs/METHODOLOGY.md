@@ -20,14 +20,14 @@ Contents: [Terms](#terms) · [Data sources](#data-sources) · [Data and cleaning
 
 | Source | What | Version used |
 |---|---|---|
-| [OpenFEMA NFIP Redacted Claims](https://www.fema.gov/openfema-data-page/nfip-redacted-claims-v3) | Florida claims, 1978 to 2026 | v3 (web service `NfipClaims`): 448,618 Florida rows and 28 fields, pulled 2026-11-03. FEMA last refreshed the dataset on 2026-09-09. |
+| [OpenFEMA NFIP Redacted Claims](https://www.fema.gov/openfema-data-page/nfip-redacted-claims-v3) | Florida claims, 1978 to 2026 | v3 (web service `NfipClaims`): 448,618 Florida rows and 30 fields, pulled 2026-11-10. FEMA last refreshed the dataset on 2026-09-09. |
 | [FRED CPIAUCSL](https://fred.stlouisfed.org/series/CPIAUCSL) | CPI-U, all items, seasonally adjusted, monthly | Complete back to 1947 except October 2025, which has no published value. |
 | [FRED WPUSI012011](https://fred.stlouisfed.org/series/WPUSI012011) | Producer Price Index by Commodity: Construction Materials, monthly | Pulled 2026-11-10; last month 2026-09. Used for the check under Payouts over time. |
 | [FRED CES2000000008](https://fred.stlouisfed.org/series/CES2000000008) | Average Hourly Earnings of Production and Nonsupervisory Employees, Construction, monthly | Pulled 2026-11-10; last month 2026-10. Used for the same check. |
 
 OpenFEMA data are published under OpenFEMA's terms of use. This project is not endorsed by FEMA.
 
-**Data versions.** FEMA retired version 2 of the claims dataset on 2026-10-15. A pull of v2 (448,425 Florida rows, frozen 2026-06-01) and the v3 pull differ little: v3 has 193 more rows (mostly recent losses), the same count of placeholder construction dates (19,370), slightly different values in about 0.3% of building payments and 0.1% of contents payments (the largest change is about +$38 million in 2024 payments), and a filled-in community name (blank for 51% of v2 rows). The claim `id` is an integer in v3 and a UUID in v2. Two v3 pulls, 2026-10-20 and 2026-11-03, agree on every id and on every field they share.
+**Data versions.** FEMA retired version 2 of the claims dataset on 2026-10-15. A pull of v2 (448,425 Florida rows, frozen 2026-06-01) and the v3 pull differ little: v3 has 193 more rows (mostly recent losses), the same count of placeholder construction dates (19,370), slightly different values in about 0.3% of building payments and 0.1% of contents payments (the largest change is about +$38 million in 2024 payments), and a filled-in community name (blank for 51% of v2 rows). The claim `id` is an integer in v3 and a UUID in v2. Three v3 pulls, 2026-10-20, 2026-11-03 and 2026-11-10, agree on every id and on every field they share.
 
 ## Data and cleaning
 
@@ -43,7 +43,7 @@ OpenFEMA data are published under OpenFEMA's terms of use. This project is not e
 | Loss date before 1978 | 0 | 311,612 |
 | Coordinates outside the Florida bounding box | 105 | **311,507** |
 
-About 30% of claims were closed without payment, so the dashboard describes the cost of a claim given that it was paid. 134,378 of the excluded rows have a total of zero and 37 a negative total; FEMA's dictionary notes that a negative amount appears when a check is not cashed and has to be reissued. The 105 claims outside the Florida box have coordinates in other states (many near New York City); FEMA's location blurring explains a move of a few miles, and the cause of these is unknown.
+About 30% of claims were closed without payment, so the dashboard describes the cost of a claim given that it was paid. 134,378 of the excluded rows have a total of zero and 37 a negative total; FEMA's dictionary notes that a negative amount appears when a check is not cashed and has to be reissued. FEMA's non-payment-reason fields carry a coded reason for 98.1% of the zero totals (the building reason, else the contents reason) and for 12 of the 37 negative totals. The 105 claims outside the Florida box have coordinates in other states (many near New York City); FEMA's location blurring explains a move of a few miles, and the cause of these is unknown.
 
 **Location.** FEMA blurs coordinates to 0.1 degree (about 7 miles) and warns that a point can land in the wrong county or state; its county field is the reliable location. The county map uses the average coordinates of each county's claims.
 
@@ -111,6 +111,19 @@ The 2010s median is $28,084 (39,944 claims) and the 2020s median without the thr
 | 2020-26 | 17.8% | $19,503 | $77,944 | $152,269 | $255,192 |
 
 Each of the three percentiles rises in every decade, so the rise in the median is not confined to one end of the distribution.
+
+Claims that paid nothing per 100 claims, by the reason FEMA records:
+
+| Loss years | Below the deductible | No damage or not a flood | Administrative error | Other reason | No reason recorded |
+|---|---|---|---|---|---|
+| 1978-79 | 18.7 | 5.6 | 1.1 | 17.0 | 0.0 |
+| 1980-89 | 10.4 | 9.5 | 2.5 | 13.9 | 0.1 |
+| 1990-99 | 5.3 | 15.3 | 2.9 | 13.0 | 0.1 |
+| 2000-09 | 2.8 | 16.0 | 5.7 | 11.4 | 0.1 |
+| 2010-19 | 6.2 | 17.5 | 6.6 | 5.9 | 0.5 |
+| 2020-26 | 3.3 | 5.7 | 4.8 | 2.7 | 1.4 |
+
+From the 2010s to the 2020s every coded reason fell, most for claims coded as no damage or not a flood (17.5 to 5.7 per 100 claims); claims coded as below the deductible fell from 6.2 to 3.3. Claims with a zero total and no recorded reason are 0.9% to 1.5% of claims from loss years 2020 to 2024, 5.1% in 2025 (36 of 705) and 20.1% in 2026 (40 of 199); claims from the newest loss years may still be open.
 
 Claims from one storm share a flood, so the intervals below treat each storm as one unit: a claim's FEMA event label, with the claims that have no label forming one group per loss year, resampled 1,000 times, and the range holding the middle 95% of the resampled medians.
 
@@ -214,7 +227,7 @@ The Loss Years filter narrows any of these to the years where the field is fille
 
 Run order (details in the README): `pipeline/fetch_data.py`, `pipeline/build_dataset.py`, `pipeline/build_deploy_data.py`. The pipeline is deterministic: the same pull gives the same cleaned dataset and the same `deploy_data/`.
 
-**Data version.** The raw pull (about 16 MB) is kept outside the repository, and a new pull returns FEMA's current data. The SHA-256 of the cached pull behind these numbers, `data/raw/fema_nfip_claims_v3_fl.csv.gz` (pulled 2026-11-03), is `e0a913f3bc8d0ae41e59a34122c2701d2897312dd43bdfbccb7bd0dd4e941bc8`. The earlier 2026-10-20 pull, whose 23 fields all agree with it, is not the source of record.
+**Data version.** The raw pull (about 16 MB) is kept outside the repository, and a new pull returns FEMA's current data. The SHA-256 of the cached pull behind these numbers, `data/raw/fema_nfip_claims_v3_fl.csv.gz` (pulled 2026-11-10), is `110da8a87aefdcb69c8131457186c1ecf085d8e30da4f8b45c173722b429be51`. The earlier pulls of 2026-10-20 and 2026-11-03, whose 23 and 28 fields all agree with it, are not the source of record.
 
 **Software.** Python 3.14 with pandas 3.1.0, NumPy 2.5.4, PyArrow 26.0.0, Requests 2.34.2, Plotly 7.1.0 and Dash 4.5.0; CI runs the tests on Python 3.13 and 3.14. The cleaned dataset is identical on the earlier pinned versions (pandas 2.0.3, NumPy 1.24.3) and on these.
 
