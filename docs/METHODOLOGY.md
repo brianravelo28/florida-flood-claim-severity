@@ -13,6 +13,8 @@ Contents: [Terms](#terms) · [Data sources](#data-sources) · [Data and cleaning
 | Post-FIRM | FEMA's label for a building whose construction started after December 31, 1974 or after the community's first FIRM, whichever is later. |
 | Base flood elevation | The flood level with a 1% chance of being reached in any year, used to rate a building. |
 | Median | The middle value: half of the claims are larger and half are smaller. |
+| Percentile | The 25th percentile is the value a quarter of the claims fall below; the 90th is the value nine tenths fall below. |
+| PPI | The Producer Price Index, which tracks the prices businesses receive; here, for construction materials. |
 
 ## Data sources
 
@@ -20,6 +22,8 @@ Contents: [Terms](#terms) · [Data sources](#data-sources) · [Data and cleaning
 |---|---|---|
 | [OpenFEMA NFIP Redacted Claims](https://www.fema.gov/openfema-data-page/nfip-redacted-claims-v3) | Florida claims, 1978 to 2026 | v3 (web service `NfipClaims`): 448,618 Florida rows and 28 fields, pulled 2026-11-03. FEMA last refreshed the dataset on 2026-09-09. |
 | [FRED CPIAUCSL](https://fred.stlouisfed.org/series/CPIAUCSL) | CPI-U, all items, seasonally adjusted, monthly | Complete back to 1947 except October 2025, which has no published value. |
+| [FRED WPUSI012011](https://fred.stlouisfed.org/series/WPUSI012011) | Producer Price Index by Commodity: Construction Materials, monthly | Pulled 2026-11-10; last month 2026-09. Used for the check under Payouts over time. |
+| [FRED CES2000000008](https://fred.stlouisfed.org/series/CES2000000008) | Average Hourly Earnings of Production and Nonsupervisory Employees, Construction, monthly | Pulled 2026-11-10; last month 2026-10. Used for the same check. |
 
 OpenFEMA data are published under OpenFEMA's terms of use. This project is not endorsed by FEMA.
 
@@ -35,11 +39,11 @@ OpenFEMA data are published under OpenFEMA's terms of use. This project is not e
 |---|---|---|
 | Raw Florida claims | | 448,618 |
 | Missing latitude, longitude or loss date | 2,591 | 446,027 |
-| Total paid is zero or negative (closed without payment) | 134,415 | 311,612 |
+| Total paid is zero or negative | 134,415 | 311,612 |
 | Loss date before 1978 | 0 | 311,612 |
 | Coordinates outside the Florida bounding box | 105 | **311,507** |
 
-About 30% of claims were closed without payment, so the dashboard describes the cost of a claim given that it was paid. The 105 claims outside the Florida box have coordinates in other states (many near New York City); FEMA's location blurring explains a move of a few miles, and the cause of these is unknown.
+About 30% of claims were closed without payment, so the dashboard describes the cost of a claim given that it was paid. 134,378 of the excluded rows have a total of zero and 37 a negative total; FEMA's dictionary notes that a negative amount appears when a check is not cashed and has to be reissued. The 105 claims outside the Florida box have coordinates in other states (many near New York City); FEMA's location blurring explains a move of a few miles, and the cause of these is unknown.
 
 **Location.** FEMA blurs coordinates to 0.1 degree (about 7 miles) and warns that a point can land in the wrong county or state; its county field is the reliable location. The county map uses the average coordinates of each county's claims.
 
@@ -93,7 +97,34 @@ By single year, the median was $15,180 in 2015 (1,180 claims), $76,699 in 2022 (
 | Without 2022 and 2024 | 16,781 | $45,693 |
 | Without Ian, Helene and Milton claims | 21,262 | $42,529 |
 
-The 2010s median is $28,084 (39,944 claims), so the 2020s median without the three largest storms is about 51% above it. Earlier decades shift the same way when their biggest years are set aside: the 1990s median is $13,988 and $18,880 without 1995 and 1999, and the 2000s median is $19,187 and $12,849 without 2004 and 2005.
+The 2010s median is $28,084 (39,944 claims) and the 2020s median without the three largest storms is $42,529 (21,262 claims). Earlier decades shift the same way when their biggest years are set aside: the 1990s median is $13,988 and $18,880 without 1995 and 1999, and the 2000s median is $19,187 and $12,849 without 2004 and 2005.
+
+**Claims that paid nothing.** Among claims with a loss date and location, the share that paid nothing was 42.5% in 1978-79, between 35.9% and 36.7% in each decade from the 1980s to the 2010s, and 17.8% in 2020-26. The paid claims in each decade, with the 25th, 75th and 90th percentiles beside the median:
+
+| Loss years | Share that paid nothing | 25th percentile | Median | 75th percentile | 90th percentile |
+|---|---|---|---|---|---|
+| 1978-79 | 42.5% | $1,780 | $4,792 | $15,226 | $45,540 |
+| 1980-89 | 36.2% | $2,858 | $8,381 | $24,055 | $54,269 |
+| 1990-99 | 36.6% | $4,402 | $13,988 | $43,793 | $95,266 |
+| 2000-09 | 35.9% | $6,502 | $19,187 | $60,288 | $148,845 |
+| 2010-19 | 36.7% | $8,667 | $28,084 | $77,426 | $154,795 |
+| 2020-26 | 17.8% | $19,503 | $77,944 | $152,269 | $255,192 |
+
+Each of the three percentiles rises in every decade, so the rise in the median is not confined to one end of the distribution.
+
+Claims from one storm share a flood, so the intervals below treat each storm as one unit: a claim's FEMA event label, with the claims that have no label forming one group per loss year, resampled 1,000 times, and the range holding the middle 95% of the resampled medians.
+
+| Loss years | Claims | Storm groups | Median claim | 95% interval |
+|---|---|---|---|---|
+| 1978-79 | 4,077 | 4 | $4,792 | $3,204 to $8,629 |
+| 1980-89 | 17,625 | 14 | $8,381 | $4,472 to $13,439 |
+| 1990-99 | 61,324 | 21 | $13,988 | $8,203 to $25,247 |
+| 2000-09 | 63,944 | 27 | $19,187 | $13,837 to $30,006 |
+| 2010-19 | 39,944 | 17 | $28,084 | $20,191 to $32,607 |
+| 2020-26 | 124,593 | 25 | $77,944 | $38,630 to $95,685 |
+| 2020-26 without Ian, Helene and Milton | 21,262 | 22 | $42,529 | $26,053 to $59,803 |
+
+The 2020-26 interval ($38,630 to $95,685) lies above the 2010-19 interval ($20,191 to $32,607). The interval without Ian, Helene and Milton ($26,053 to $59,803) overlaps the 2010-19 interval.
 
 The ten named storms with the most claims:
 
@@ -110,7 +141,18 @@ The ten named storms with the most claims:
 | Hurricane Elena (1985) | 7,438 | $0.23B | $16,441 |
 | Hurricane Josephine (1996) | 6,495 | $0.21B | $21,030 |
 
-CPI-U puts claims from different years on one price level. Payouts have grown much faster than that: the data show the growth, and possible reasons include storm severity, rebuilding costs rising faster than CPI-U, larger coverage limits, changes in claims handling and a different mix of insured buildings.
+CPI-U puts claims from different years on one price level. Payouts have grown much faster than that: the data show the growth, and possible reasons include storm severity, larger coverage limits, changes in claims handling and a different mix of insured buildings.
+
+**Other price indexes.** CPI-U measures the prices consumers pay. The same payments were also adjusted to 2025 dollars with two construction-cost series, by loss month and with the 2025 average as the base, as for CPI-U: the producer price index for construction materials and average hourly earnings of production and nonsupervisory employees in construction. The last row averages the two adjusted payouts.
+
+| Price index | 1978-79 median | 2010-19 median | 2020-26 median | 2020-26 relative to 1978-79 | 2020-26 without Ian, Helene and Milton, relative to 2010-19 |
+|---|---|---|---|---|---|
+| CPI-U (used throughout) | $4,792 | $28,084 | $77,944 | 16.3 times | +51% |
+| Construction materials prices | $4,138 | $32,629 | $76,854 | 18.6 times | +33% |
+| Construction wages | $4,592 | $30,004 | $79,727 | 17.4 times | +46% |
+| Average of the two | $4,362 | $31,343 | $78,503 | 18.0 times | +39% |
+
+Under every index the 2020-26 median is 16.3 to 18.6 times the 1978-79 median, and the 2020s median without the three storms is 33% to 51% above the 2010s median.
 
 ## Factors
 
@@ -157,6 +199,15 @@ The Loss Years filter narrows any of these to the years where the field is fille
 
 **Building age and loss year.** The median building age at loss (buildings with known dates) was 15 years in the 1980s, 22 in the 1990s, 28 in the 2000s, 38 in the 2010s and 50 in the 2020s, and payouts rose over the same period. The Building age view therefore also draws one line per decade of loss, so a building's age is compared with others of the same era. The first-flood-map factor overlaps with building age for the same reason.
 
+**Elevated buildings within groups.** The elevated median is below the not-elevated median in all 24 combinations of decade (1990s to 2020s) and water-depth band that have 30 or more claims on both sides. Within flood zones it is lower in 13 of 16 combinations, including every zone in the 2010s and 2020s; it is higher in X / B / C and A / AH / AO / AR / A99 zones in the 1990s and in X / B / C zones in the 2000s. For 2020-26:
+
+| Flood zone | Elevated claims | Elevated median | Not elevated claims | Not elevated median |
+|---|---|---|---|---|
+| X / B / C (moderate-minimal) | 467 | $20,461 | 6,835 | $40,036 |
+| A / AH / AO / AR / A99 (no base elevation, shallow, special) | 337 | $17,690 | 4,120 | $55,445 |
+| AE / A1-A30 (base elevation known) | 18,975 | $15,355 | 88,788 | $98,228 |
+| V / VE (velocity, coastal) | 1,707 | $27,177 | 3,357 | $100,141 |
+
 **Small groups.** A claim count under 30 carries an asterisk in every table and in the year chart's hover text. The charts draw groups with 30 or more claims, and the by-decade building-age lines use points with 30 or more claims.
 
 ## Reproducibility
@@ -165,9 +216,9 @@ Run order (details in the README): `pipeline/fetch_data.py`, `pipeline/build_dat
 
 **Data version.** The raw pull (about 16 MB) is kept outside the repository, and a new pull returns FEMA's current data. The SHA-256 of the cached pull behind these numbers, `data/raw/fema_nfip_claims_v3_fl.csv.gz` (pulled 2026-11-03), is `e0a913f3bc8d0ae41e59a34122c2701d2897312dd43bdfbccb7bd0dd4e941bc8`. The earlier 2026-10-20 pull, whose 23 fields all agree with it, is not the source of record.
 
-**Software.** Python 3.14 with pandas 3.1.0, NumPy 2.5.4, PyArrow 26.0.0, Requests 2.34.2, Plotly 7.1.0 and Dash 4.4.1; CI runs the tests on Python 3.13 and 3.14. The cleaned dataset is identical on the earlier pinned versions (pandas 2.0.3, NumPy 1.24.3) and on these.
+**Software.** Python 3.14 with pandas 3.1.0, NumPy 2.5.4, PyArrow 26.0.0, Requests 2.34.2, Plotly 7.1.0 and Dash 4.5.0; CI runs the tests on Python 3.13 and 3.14. The cleaned dataset is identical on the earlier pinned versions (pandas 2.0.3, NumPy 1.24.3) and on these.
 
-**Tests.** `tests/` holds about 70 tests on small hand-built examples and on the committed bundle: the exclusion counts and payout sum, the inflation adjustment, the event labels, the grouping of every factor, the consistency of `deploy_data/`, and every dashboard callback, including empty filters.
+**Tests.** `tests/` holds more than 80 tests on small hand-built examples and on the committed bundle: the exclusion counts and payout sum, the inflation adjustment and its construction-cost alternatives, the storm-level intervals, the event labels, the grouping of every factor, the consistency of `deploy_data/`, and every dashboard callback, including empty filters.
 
 ## Deployment notes
 
