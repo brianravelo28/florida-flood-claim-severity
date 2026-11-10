@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from constants import (AGE_BINS, AGE_LABELS, CAUSE_ORDER, COVERAGE_LABELS, DEDUCTIBLE_ORDER, DEPTH_LABELS, DEPTH_ORDER, ELEVATED_LABELS,
+from constants import (AGE_BINS, AGE_LABELS, BIG_THREE_STORMS, BOOTSTRAP_REPS, BOOTSTRAP_SEED, CAUSE_ORDER, COVERAGE_LABELS, DEDUCTIBLE_ORDER, DEPTH_LABELS, DEPTH_ORDER, ELEVATED_LABELS,
                        ELEVATION_ORDER, EVENT_GROUPS, FIRM_LABELS, FLOOD_ORDER, FLOOR_ORDER, FOUNDATION_ORDER, MIN_CLAIMS, OCC_ORDER,
                        PRIMARY_LABELS)
 
@@ -38,6 +38,51 @@ def decade_label(decade, years):
     return f"{first}-{str(last)[-2:]}" if first // 10 == last // 10 else f"{first}-{last}"
 
 
+def storm_groups(table):
+    """The unit that moves together: a claim's FEMA event label; claims with no label form one group per loss year."""
+    return table["event"].astype("string").fillna("no label " + table["yearOfLoss"].astype(str))
+
+
+def median_interval(values, groups, reps=BOOTSTRAP_REPS, seed=BOOTSTRAP_SEED):
+    """95% interval for a median when whole groups (storms) are resampled instead of single claims."""
+    rng = np.random.default_rng(seed)
+    parts = [g.to_numpy() for _, g in values.groupby(groups.to_numpy(), sort=True)]
+    k = len(parts)
+    medians = [np.median(np.concatenate([parts[i] for i in rng.integers(0, k, k)])) for _ in range(reps)]
+    low, high = np.percentile(medians, [2.5, 97.5])
+    return k, float(low), float(high)
+
+
+def storm_intervals(table, pay, year, decade):
+    """Median and storm-level 95% interval for each decade of loss and for the 2020s without the three largest storms."""
+    groups = storm_groups(table)
+    big3 = table["event"].astype("string").isin(BIG_THREE_STORMS).fillna(False).astype(bool)
+    periods = {int(d): decade == d for d in sorted(decade.unique())}
+    periods["without_ian_helene_milton_2020s"] = (year >= 2020) & ~big3
+    out = {}
+    for name, mask in periods.items():
+        k, low, high = median_interval(pay[mask], groups[mask])
+        out[name] = {"claims": int(mask.sum()), "storm_groups": k, "median": float(pay[mask].median()), "low": low, "high": high}
+    return out
+
+
+def elevated_within_groups(table, pay, decade):
+    """Elevated vs not elevated medians inside each water-depth band and flood zone, per decade (cells with MIN_CLAIMS on both sides)."""
+    elevated = table["elevated"].astype(str) == "Elevated"
+    out = {}
+    for name, col in (("water_depth", "depth_band"), ("flood_zone", "flood_zone_group")):
+        cells = []
+        for d in (1990, 2000, 2010, 2020):
+            for group, g in table[decade == d].groupby(col, observed=True):
+                yes, no = pay[g.index][elevated[g.index]], pay[g.index][~elevated[g.index]]
+                if len(yes) >= MIN_CLAIMS and len(no) >= MIN_CLAIMS:
+                    cells.append({"decade": d, "group": str(group), "elevated": {"claims": int(len(yes)), "median": float(yes.median())},
+                                  "not_elevated": {"claims": int(len(no)), "median": float(no.median())}})
+        out[name] = {"cells": len(cells), "elevated_lower": sum(c["elevated"]["median"] < c["not_elevated"]["median"] for c in cells),
+                     "by_cell": cells}
+    return out
+
+
 def summarize(df, table, report):
     """Headline numbers, all computed from the same float32 payouts the dashboard uses."""
     pay = table["amountPaid_real"].astype("float64")
@@ -51,11 +96,13 @@ def summarize(df, table, report):
         yrs = year[decade == d]
         out["by_decade"][int(d)] = {"label": decade_label(d, yrs), "claims": int(len(g)), "median": float(g.median()),
                                     "total_paid": float(g.sum())}
+    out["spread_by_decade"] = {int(d): {"p25": float(g.quantile(0.25)), "p75": float(g.quantile(0.75)), "p90": float(g.quantile(0.9))}
+                               for d, g in pay.groupby(decade)}
     out["by_year"] = {int(y): {"claims": int(len(g)), "median": float(g.median())} for y, g in pay.groupby(year)}
 
     d20 = (year >= 2020)
     ev = table["event"].astype("string")
-    big3 = ev.isin(["Hurricane Ian", "Hurricane Helene", "Hurricane Milton"])
+    big3 = ev.isin(BIG_THREE_STORMS)
     out["sensitivity_2020s"] = {
         "all": {"claims": int(d20.sum()), "median": float(pay[d20].median())},
         "without_2022": {"claims": int((d20 & (year != 2022)).sum()), "median": float(pay[d20 & (year != 2022)].median())},
@@ -99,6 +146,7 @@ def summarize(df, table, report):
     out["median_building_age_at_loss_by_decade"] = {int(d): float(g.median()) for d, g in known["building_age_years"].groupby(kdec)}
     out["duplicates_kept"] = report["rows_identical_to_an_earlier_row_except_id"]
     out["findings"] = findings(table, pay, year, decade)
+    out["median_intervals_by_storm"] = storm_intervals(table, pay, year, decade)
     return out
 
 
@@ -133,6 +181,7 @@ def findings(table, pay, year, decade):
             for d in (1990, 2000, 2010, 2020)},
         "moderate_minimal_zone": {"claims": int(zone.sum()), "pct_claims": round(100 * float(zone.mean()), 1),
                                   "median": float(pay[zone].median())},
+        "elevated_within_groups": elevated_within_groups(table, pay, decade),
     }
 
 

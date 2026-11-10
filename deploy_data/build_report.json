@@ -1,6 +1,42 @@
 {
   "raw_rows": 448618,
   "missing_latlon_pct": 0.578,
+  "closed_without_payment_by_decade": {
+    "1970": {
+      "claims": 7087,
+      "without_payment": 3010,
+      "pct": 42.5
+    },
+    "1980": {
+      "claims": 27692,
+      "without_payment": 10038,
+      "pct": 36.2
+    },
+    "1990": {
+      "claims": 96821,
+      "without_payment": 35435,
+      "pct": 36.6
+    },
+    "2000": {
+      "claims": 99790,
+      "without_payment": 35837,
+      "pct": 35.9
+    },
+    "2010": {
+      "claims": 63099,
+      "without_payment": 23153,
+      "pct": 36.7
+    },
+    "2020": {
+      "claims": 151538,
+      "without_payment": 26942,
+      "pct": 17.8
+    }
+  },
+  "total_paid_zero_or_negative": {
+    "zero": 134378,
+    "negative": 37
+  },
   "rows_dropped": {
     "missing lat/lon/date": 2591,
     "amountPaid <= 0 (closed without payment)": 134415,
@@ -17,6 +53,70 @@
     "2025-10"
   ],
   "cpi_base": "2025 average CPI-U (FRED CPIAUCSL) = 322.186",
+  "deflator_sensitivity": {
+    "series": {
+      "materials": "FRED WPUSI012011 (PPI, construction materials)",
+      "wages": "FRED CES2000000008 (average hourly earnings, construction)",
+      "last_month": {
+        "materials": "2026-09",
+        "wages": "2026-10"
+      }
+    },
+    "results": {
+      "cpi": {
+        "label": "CPI-U (as published)",
+        "median_by_decade": {
+          "1970": 4792.260641129033,
+          "1980": 8381.395422901081,
+          "1990": 13987.564425660517,
+          "2000": 19186.631643058932,
+          "2010": 28084.50000109212,
+          "2020": 77943.73221546426
+        },
+        "median_2020s_without_ian_helene_milton": 42529.44041377146,
+        "ratio_to_2010s": 1.5143385288012112
+      },
+      "materials": {
+        "label": "Construction materials prices",
+        "median_by_decade": {
+          "1970": 4137.668141235136,
+          "1980": 8662.030785928691,
+          "1990": 16679.023342268585,
+          "2000": 23494.07644886351,
+          "2010": 32629.449925924993,
+          "2020": 76854.0763674519
+        },
+        "median_2020s_without_ian_helene_milton": 43267.282738398266,
+        "ratio_to_2010s": 1.3260193731927188
+      },
+      "wages": {
+        "label": "Construction wages",
+        "median_by_decade": {
+          "1970": 4592.133333333334,
+          "1980": 8799.266432823131,
+          "1990": 16405.114533431923,
+          "2000": 22019.415772908775,
+          "2010": 30003.99278758472,
+          "2020": 79726.62637474596
+        },
+        "median_2020s_without_ian_helene_milton": 43696.37338096701,
+        "ratio_to_2010s": 1.4563519492328376
+      },
+      "blend": {
+        "label": "Average of materials prices and wages",
+        "median_by_decade": {
+          "1970": 4362.1930031801885,
+          "1980": 8731.56017524991,
+          "1990": 16558.42785900271,
+          "2000": 22764.799017525766,
+          "2010": 31343.257469026397,
+          "2020": 78502.7758541132
+        },
+        "median_2020s_without_ian_helene_milton": 43474.2566247099,
+        "ratio_to_2010s": 1.3870369621814655
+      }
+    }
+  },
   "checks": {
     "dateOfLoss >= 1978": true,
     "building age in [0, 200]": true,

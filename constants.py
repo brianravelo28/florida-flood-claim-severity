@@ -23,6 +23,13 @@ FEMA_PULL_DATE = "2026-11-03"
 # Groups with fewer claims than this are flagged or left out of rankings and medians.
 MIN_CLAIMS = 30
 
+# The three storms whose claims carry the 2020s; summary.json shows the 2020s median without them.
+BIG_THREE_STORMS = ("Hurricane Ian", "Hurricane Helene", "Hurricane Milton")
+
+# Intervals for a median resample whole storms (claims from one storm are not independent of each other).
+BOOTSTRAP_REPS = 1000
+BOOTSTRAP_SEED = 20261110
+
 # Building coverage: the policy's building limit. 40% of claims sit at exactly $250,000 and 2.6% have no building coverage,
 # so those get bands of their own.
 COVERAGE_BINS = [-1, 0, 50000, 100000, 150000, 249999, 250000, 1e12]

@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 
 from constants import (CAUSE_LABELS, COVERAGE_BINS, COVERAGE_LABELS, DEDUCTIBLE_LABELS, DEPTH_BINS, DEPTH_LABELS, ELEVATION_LABELS,
-                       EVENT_MERGES, EVENT_NEEDS_YEAR, FIRM_LABELS, FLOOR_LABELS, FOUNDATION_LABELS, NAMED_STORM_PATTERN,
+                       BIG_THREE_STORMS, EVENT_MERGES, EVENT_NEEDS_YEAR, FIRM_LABELS, FLOOR_LABELS, FOUNDATION_LABELS, NAMED_STORM_PATTERN,
                        PRIMARY_LABELS)
-from pipeline.fetch_data import fetch_cpi, fetch_fema
+from pipeline.fetch_data import fetch_cpi, fetch_fema, fetch_price_indexes
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_CSV = ROOT / "data" / "insurance_clean.csv.gz"
@@ -63,6 +63,15 @@ def log(msg):
 
 
 # ---------------------------------------------------------------- claims
+def without_payment_by_decade(c):
+    """Claims with a loss date and location, and how many of them paid nothing (zero or negative total), by decade of loss."""
+    decade = (c["dateOfLoss"].dt.year // 10) * 10
+    unpaid = c["amountPaid"] <= 0
+    claims, none_paid = unpaid.groupby(decade).size(), unpaid.groupby(decade).sum()
+    return {int(d): {"claims": int(claims[d]), "without_payment": int(none_paid[d]), "pct": round(100 * float(none_paid[d] / claims[d]), 1)}
+            for d in claims.index}
+
+
 def prepare_claims(raw):
     c = raw.copy()
     log(f"Raw FEMA claims: {len(c):,}")
@@ -79,6 +88,8 @@ def prepare_claims(raw):
     report["missing_latlon_pct"] = round(100 * steps["missing lat/lon/date"] / n, 3)
 
     n = len(c)
+    report["closed_without_payment_by_decade"] = without_payment_by_decade(c)
+    report["total_paid_zero_or_negative"] = {"zero": int((c["amountPaid"] == 0).sum()), "negative": int((c["amountPaid"] < 0).sum())}
     c = c[c["amountPaid"] > 0]
     steps["amountPaid <= 0 (closed without payment)"] = n - len(c)
 
@@ -228,6 +239,45 @@ def add_real_dollars(c):
     return c
 
 
+def monthly_index(frame):
+    """A FRED monthly series as a Series indexed by month; a gap inside the series is filled by linear interpolation."""
+    value = pd.to_numeric(frame[frame.columns[1]], errors="coerce").interpolate(limit_area="inside")
+    return pd.Series(value.to_numpy(), index=frame["observation_date"].dt.to_period("M"))
+
+
+def deflate_with(series, c):
+    """Payouts in CPI_BASE_YEAR dollars using another monthly price index (same method as add_real_dollars)."""
+    base = series[series.index.year == CPI_BASE_YEAR]
+    assert len(base) == 12 and base.notna().all(), f"need 12 months of {CPI_BASE_YEAR} values"
+    at_loss = c["dateOfLoss"].dt.to_period("M").map(series)
+    assert at_loss.notna().all(), "price index missing for some loss months"
+    return c["amountPaid"] * base.mean() / at_loss
+
+
+def deflator_sensitivity(c, indexes):
+    """Median payout by decade when the same payments are adjusted with construction costs instead of CPI-U.
+
+    The blend is the average of the payout adjusted with materials prices and the payout adjusted with construction wages.
+    Also gives the 2020s median without the three largest storms and its ratio to the 2010s median.
+    """
+    pay = {"cpi": c["amountPaid_real"]}
+    for key in ("materials", "wages"):
+        pay[key] = deflate_with(monthly_index(indexes[key]), c)
+    pay["blend"] = (pay["materials"] + pay["wages"]) / 2
+    labels = {"cpi": "CPI-U (as published)", "materials": "Construction materials prices", "wages": "Construction wages",
+              "blend": "Average of materials prices and wages"}
+    decade = (c["yearOfLoss"] // 10) * 10
+    in_2020s = c["yearOfLoss"] >= 2020
+    big3 = c["event"].astype("string").isin(BIG_THREE_STORMS).fillna(False).astype(bool)
+    out = {}
+    for key, p in pay.items():
+        by_decade = {int(d): float(g.median()) for d, g in p.groupby(decade)}
+        without = float(p[in_2020s & ~big3].median())
+        out[key] = {"label": labels[key], "median_by_decade": by_decade, "median_2020s_without_ian_helene_milton": without,
+                    "ratio_to_2010s": without / by_decade[2010]}
+    return out
+
+
 # ---------------------------------------------------------------- checks
 def validate(c):
     log("\nValidation")
@@ -253,6 +303,12 @@ def main():
     claims = prepare_claims(raw)
     claims = engineer_features(claims)
     claims = add_real_dollars(claims)
+    prices = fetch_price_indexes()
+    report["deflator_sensitivity"] = {
+        "series": {"materials": "FRED WPUSI012011 (PPI, construction materials)",
+                   "wages": "FRED CES2000000008 (average hourly earnings, construction)",
+                   "last_month": {k: str(monthly_index(v).index.max()) for k, v in prices.items()}},
+        "results": deflator_sensitivity(claims, prices)}
     validate(claims)
 
     cols = ["id", "dateOfLoss", "yearOfLoss", "latitude", "longitude", "countyCode", "countyName", "ratedFloodZone",

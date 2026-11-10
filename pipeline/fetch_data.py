@@ -1,4 +1,4 @@
-"""Download and cache the real source data: OpenFEMA NFIP claims (Florida) and FRED CPI-U.
+"""Download and cache the real source data: OpenFEMA NFIP claims (Florida), FRED CPI-U and two FRED construction-cost series.
 
 Everything lands in data/raw/ (gitignored); a re-run reuses the cache unless called with --refresh.
 Claims come from OpenFEMA's "NFIP Redacted Claims" v3 (the web service is named NfipClaims). FEMA retired version 2 of the
@@ -15,6 +15,12 @@ RAW_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
 FEMA_CACHE = RAW_DIR / "fema_nfip_claims_v3_fl.csv.gz"
 CPI_CACHE = RAW_DIR / "cpi_u.csv"
 CPI_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL"
+# Used only to check how much the inflation adjustment matters: construction materials prices (producer price index) and
+# average hourly earnings of production and nonsupervisory employees in construction.
+PRICE_SERIES = {
+    "materials": ("WPUSI012011", RAW_DIR / "ppi_construction_materials.csv"),
+    "wages": ("CES2000000008", RAW_DIR / "construction_hourly_earnings.csv"),
+}
 
 FEMA_URL = "https://www.fema.gov/api/open/v3/NfipClaims"
 HEADERS = {"User-Agent": "florida-flood-claim-severity/1.0 (research project; https://github.com/brianravelo28/florida-flood-claim-severity)"}
@@ -87,7 +93,20 @@ def fetch_cpi(refresh=False):
     return pd.read_csv(CPI_CACHE, parse_dates=["observation_date"])
 
 
+def fetch_price_indexes(refresh=False):
+    """The two construction-cost series, monthly, as {"materials": frame, "wages": frame} (columns observation_date, FRED id)."""
+    out = {}
+    for key, (series_id, cache) in PRICE_SERIES.items():
+        if not cache.exists() or refresh:
+            RAW_DIR.mkdir(parents=True, exist_ok=True)
+            cache.write_text(_get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}").text)
+            print(f"{series_id}: saved {cache}", flush=True)
+        out[key] = pd.read_csv(cache, parse_dates=["observation_date"])
+    return out
+
+
 if __name__ == "__main__":
     refresh = "--refresh" in sys.argv
     fetch_cpi(refresh)
+    fetch_price_indexes(refresh)
     fetch_fema(refresh)

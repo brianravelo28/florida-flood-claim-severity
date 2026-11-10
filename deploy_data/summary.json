@@ -42,6 +42,38 @@
       "total_paid": 14547528910.668877
     }
   },
+  "spread_by_decade": {
+    "1970": {
+      "p25": 1779.780029296875,
+      "p75": 15225.9599609375,
+      "p90": 45539.64062500001
+    },
+    "1980": {
+      "p25": 2858.25,
+      "p75": 24055.2890625,
+      "p90": 54268.73984375
+    },
+    "1990": {
+      "p25": 4401.9776611328125,
+      "p75": 43792.84375,
+      "p90": 95266.14375000008
+    },
+    "2000": {
+      "p25": 6502.4276123046875,
+      "p75": 60288.2841796875,
+      "p90": 148844.62500000003
+    },
+    "2010": {
+      "p25": 8666.789794921875,
+      "p75": 77425.685546875,
+      "p90": 154794.78125
+    },
+    "2020": {
+      "p25": 19503.470703125,
+      "p75": 152268.734375,
+      "p90": 255192.1875
+    }
+  },
   "by_year": {
     "1978": {
       "claims": 255,
@@ -498,6 +530,551 @@
       "claims": 39545,
       "pct_claims": 12.7,
       "median": 19622.380859375
+    },
+    "elevated_within_groups": {
+      "water_depth": {
+        "cells": 24,
+        "elevated_lower": 24,
+        "by_cell": [
+          {
+            "decade": 1990,
+            "group": "0 in",
+            "elevated": {
+              "claims": 4189,
+              "median": 8576.240234375
+            },
+            "not_elevated": {
+              "claims": 29739,
+              "median": 11210.400390625
+            }
+          },
+          {
+            "decade": 1990,
+            "group": "1-6 in",
+            "elevated": {
+              "claims": 1864,
+              "median": 11719.76513671875
+            },
+            "not_elevated": {
+              "claims": 17914,
+              "median": 22401.3251953125
+            }
+          },
+          {
+            "decade": 1990,
+            "group": "7-12 in",
+            "elevated": {
+              "claims": 176,
+              "median": 28204.849609375
+            },
+            "not_elevated": {
+              "claims": 768,
+              "median": 30651.419921875
+            }
+          },
+          {
+            "decade": 1990,
+            "group": "13-36 in",
+            "elevated": {
+              "claims": 152,
+              "median": 12255.76513671875
+            },
+            "not_elevated": {
+              "claims": 799,
+              "median": 48415.078125
+            }
+          },
+          {
+            "decade": 1990,
+            "group": "Over 36 in",
+            "elevated": {
+              "claims": 44,
+              "median": 25298.9453125
+            },
+            "not_elevated": {
+              "claims": 175,
+              "median": 56881.94140625
+            }
+          },
+          {
+            "decade": 1990,
+            "group": "Not recorded",
+            "elevated": {
+              "claims": 530,
+              "median": 8683.294921875
+            },
+            "not_elevated": {
+              "claims": 4974,
+              "median": 11018.9951171875
+            }
+          },
+          {
+            "decade": 2000,
+            "group": "0 in",
+            "elevated": {
+              "claims": 5048,
+              "median": 14573.044921875
+            },
+            "not_elevated": {
+              "claims": 19403,
+              "median": 14984.490234375
+            }
+          },
+          {
+            "decade": 2000,
+            "group": "1-6 in",
+            "elevated": {
+              "claims": 5934,
+              "median": 11755.27001953125
+            },
+            "not_elevated": {
+              "claims": 20963,
+              "median": 25227.69921875
+            }
+          },
+          {
+            "decade": 2000,
+            "group": "7-12 in",
+            "elevated": {
+              "claims": 1215,
+              "median": 26988.310546875
+            },
+            "not_elevated": {
+              "claims": 2343,
+              "median": 54297.28125
+            }
+          },
+          {
+            "decade": 2000,
+            "group": "13-36 in",
+            "elevated": {
+              "claims": 1310,
+              "median": 14648.27001953125
+            },
+            "not_elevated": {
+              "claims": 1800,
+              "median": 58503.80078125
+            }
+          },
+          {
+            "decade": 2000,
+            "group": "Over 36 in",
+            "elevated": {
+              "claims": 597,
+              "median": 31019.2890625
+            },
+            "not_elevated": {
+              "claims": 617,
+              "median": 119744.5078125
+            }
+          },
+          {
+            "decade": 2000,
+            "group": "Not recorded",
+            "elevated": {
+              "claims": 721,
+              "median": 11978.419921875
+            },
+            "not_elevated": {
+              "claims": 3993,
+              "median": 14107.98046875
+            }
+          },
+          {
+            "decade": 2010,
+            "group": "0 in",
+            "elevated": {
+              "claims": 3294,
+              "median": 10063.740234375
+            },
+            "not_elevated": {
+              "claims": 5183,
+              "median": 17694.470703125
+            }
+          },
+          {
+            "decade": 2010,
+            "group": "1-6 in",
+            "elevated": {
+              "claims": 5342,
+              "median": 19891.294921875
+            },
+            "not_elevated": {
+              "claims": 17746,
+              "median": 40453.830078125
+            }
+          },
+          {
+            "decade": 2010,
+            "group": "7-12 in",
+            "elevated": {
+              "claims": 397,
+              "median": 36797.28125
+            },
+            "not_elevated": {
+              "claims": 1536,
+              "median": 50841.080078125
+            }
+          },
+          {
+            "decade": 2010,
+            "group": "13-36 in",
+            "elevated": {
+              "claims": 452,
+              "median": 15826.6103515625
+            },
+            "not_elevated": {
+              "claims": 1099,
+              "median": 69801.1171875
+            }
+          },
+          {
+            "decade": 2010,
+            "group": "Over 36 in",
+            "elevated": {
+              "claims": 243,
+              "median": 11143.83984375
+            },
+            "not_elevated": {
+              "claims": 229,
+              "median": 74563.078125
+            }
+          },
+          {
+            "decade": 2010,
+            "group": "Not recorded",
+            "elevated": {
+              "claims": 1229,
+              "median": 18113.30078125
+            },
+            "not_elevated": {
+              "claims": 3194,
+              "median": 23825.6796875
+            }
+          },
+          {
+            "decade": 2020,
+            "group": "0 in",
+            "elevated": {
+              "claims": 5284,
+              "median": 13957.66455078125
+            },
+            "not_elevated": {
+              "claims": 27038,
+              "median": 68136.84765625
+            }
+          },
+          {
+            "decade": 2020,
+            "group": "1-6 in",
+            "elevated": {
+              "claims": 7887,
+              "median": 21334.490234375
+            },
+            "not_elevated": {
+              "claims": 61179,
+              "median": 104267.6171875
+            }
+          },
+          {
+            "decade": 2020,
+            "group": "7-12 in",
+            "elevated": {
+              "claims": 1045,
+              "median": 59402.62890625
+            },
+            "not_elevated": {
+              "claims": 3475,
+              "median": 123716.1015625
+            }
+          },
+          {
+            "decade": 2020,
+            "group": "13-36 in",
+            "elevated": {
+              "claims": 390,
+              "median": 31617.2841796875
+            },
+            "not_elevated": {
+              "claims": 3351,
+              "median": 131050.578125
+            }
+          },
+          {
+            "decade": 2020,
+            "group": "Over 36 in",
+            "elevated": {
+              "claims": 890,
+              "median": 28496.884765625
+            },
+            "not_elevated": {
+              "claims": 4904,
+              "median": 78947.13671875
+            }
+          },
+          {
+            "decade": 2020,
+            "group": "Not recorded",
+            "elevated": {
+              "claims": 5990,
+              "median": 11299.259765625
+            },
+            "not_elevated": {
+              "claims": 3160,
+              "median": 13482.009765625
+            }
+          }
+        ]
+      },
+      "flood_zone": {
+        "cells": 16,
+        "elevated_lower": 13,
+        "by_cell": [
+          {
+            "decade": 1990,
+            "group": "X / B / C (moderate-minimal)",
+            "elevated": {
+              "claims": 525,
+              "median": 17314.1796875
+            },
+            "not_elevated": {
+              "claims": 8183,
+              "median": 14981.1396484375
+            }
+          },
+          {
+            "decade": 1990,
+            "group": "A / AH / AO / AR / A99 (no base elevation, shallow, special)",
+            "elevated": {
+              "claims": 576,
+              "median": 10480.044921875
+            },
+            "not_elevated": {
+              "claims": 10365,
+              "median": 6860.06005859375
+            }
+          },
+          {
+            "decade": 1990,
+            "group": "AE / A1-A30 (base elevation known)",
+            "elevated": {
+              "claims": 4654,
+              "median": 8412.4052734375
+            },
+            "not_elevated": {
+              "claims": 32122,
+              "median": 17673.6943359375
+            }
+          },
+          {
+            "decade": 1990,
+            "group": "V / VE (velocity, coastal)",
+            "elevated": {
+              "claims": 1175,
+              "median": 12209.400390625
+            },
+            "not_elevated": {
+              "claims": 3412,
+              "median": 28248.25
+            }
+          },
+          {
+            "decade": 2000,
+            "group": "X / B / C (moderate-minimal)",
+            "elevated": {
+              "claims": 704,
+              "median": 21012.58984375
+            },
+            "not_elevated": {
+              "claims": 10396,
+              "median": 17539.51953125
+            }
+          },
+          {
+            "decade": 2000,
+            "group": "A / AH / AO / AR / A99 (no base elevation, shallow, special)",
+            "elevated": {
+              "claims": 859,
+              "median": 12829.26953125
+            },
+            "not_elevated": {
+              "claims": 8681,
+              "median": 13755.5703125
+            }
+          },
+          {
+            "decade": 2000,
+            "group": "AE / A1-A30 (base elevation known)",
+            "elevated": {
+              "claims": 10794,
+              "median": 12600.39990234375
+            },
+            "not_elevated": {
+              "claims": 28217,
+              "median": 26028.51953125
+            }
+          },
+          {
+            "decade": 2000,
+            "group": "V / VE (velocity, coastal)",
+            "elevated": {
+              "claims": 2465,
+              "median": 22434.380859375
+            },
+            "not_elevated": {
+              "claims": 1384,
+              "median": 35121.169921875
+            }
+          },
+          {
+            "decade": 2010,
+            "group": "X / B / C (moderate-minimal)",
+            "elevated": {
+              "claims": 978,
+              "median": 20257.35546875
+            },
+            "not_elevated": {
+              "claims": 8418,
+              "median": 26758.1298828125
+            }
+          },
+          {
+            "decade": 2010,
+            "group": "A / AH / AO / AR / A99 (no base elevation, shallow, special)",
+            "elevated": {
+              "claims": 356,
+              "median": 13902.63525390625
+            },
+            "not_elevated": {
+              "claims": 2562,
+              "median": 16356.00537109375
+            }
+          },
+          {
+            "decade": 2010,
+            "group": "AE / A1-A30 (base elevation known)",
+            "elevated": {
+              "claims": 8462,
+              "median": 14933.02490234375
+            },
+            "not_elevated": {
+              "claims": 17099,
+              "median": 43566.640625
+            }
+          },
+          {
+            "decade": 2010,
+            "group": "V / VE (velocity, coastal)",
+            "elevated": {
+              "claims": 1158,
+              "median": 18734.26953125
+            },
+            "not_elevated": {
+              "claims": 796,
+              "median": 55217.7890625
+            }
+          },
+          {
+            "decade": 2020,
+            "group": "X / B / C (moderate-minimal)",
+            "elevated": {
+              "claims": 467,
+              "median": 20460.76953125
+            },
+            "not_elevated": {
+              "claims": 6835,
+              "median": 40035.53125
+            }
+          },
+          {
+            "decade": 2020,
+            "group": "A / AH / AO / AR / A99 (no base elevation, shallow, special)",
+            "elevated": {
+              "claims": 337,
+              "median": 17690.130859375
+            },
+            "not_elevated": {
+              "claims": 4120,
+              "median": 55444.673828125
+            }
+          },
+          {
+            "decade": 2020,
+            "group": "AE / A1-A30 (base elevation known)",
+            "elevated": {
+              "claims": 18975,
+              "median": 15355.26953125
+            },
+            "not_elevated": {
+              "claims": 88788,
+              "median": 98227.98828125
+            }
+          },
+          {
+            "decade": 2020,
+            "group": "V / VE (velocity, coastal)",
+            "elevated": {
+              "claims": 1707,
+              "median": 27177.0
+            },
+            "not_elevated": {
+              "claims": 3357,
+              "median": 100140.96875
+            }
+          }
+        ]
+      }
+    }
+  },
+  "median_intervals_by_storm": {
+    "1970": {
+      "claims": 4077,
+      "storm_groups": 4,
+      "median": 4792.259765625,
+      "low": 3203.610107421875,
+      "high": 8628.75
+    },
+    "1980": {
+      "claims": 17625,
+      "storm_groups": 14,
+      "median": 8381.400390625,
+      "low": 4471.767651367188,
+      "high": 13438.689526367187
+    },
+    "1990": {
+      "claims": 61324,
+      "storm_groups": 21,
+      "median": 13987.56494140625,
+      "low": 8203.232495117187,
+      "high": 25246.748681640624
+    },
+    "2000": {
+      "claims": 63944,
+      "storm_groups": 27,
+      "median": 19186.6298828125,
+      "low": 13837.36064453125,
+      "high": 30005.9197265625
+    },
+    "2010": {
+      "claims": 39944,
+      "storm_groups": 17,
+      "median": 28084.5,
+      "low": 20191.2654296875,
+      "high": 32607.261791992187
+    },
+    "2020": {
+      "claims": 124593,
+      "storm_groups": 25,
+      "median": 77943.7265625,
+      "low": 38629.90458984375,
+      "high": 95685.1095703125
+    },
+    "without_ian_helene_milton_2020s": {
+      "claims": 21262,
+      "storm_groups": 22,
+      "median": 42529.439453125,
+      "low": 26052.85947265625,
+      "high": 59802.75703125
     }
   }
 }
