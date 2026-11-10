@@ -237,6 +237,6 @@ Run order (details in the README): `pipeline/fetch_data.py`, `pipeline/build_dat
 
 The hosted dashboard runs on Render's Starter plan (512 MB of RAM, kept awake). The service installs `requirements-render.txt` and serves `wsgi.py` with gunicorn 26.2.0 (one worker, four threads); `docs/render.yaml` records these settings, and Render's dashboard controls the live service, with its settings taking precedence over the file.
 
-The app holds all 311,507 paid claims as one compact table (4.0 MB on disk) and filters it live; the headline numbers are precomputed in `summary.json`. On Render the process uses about 160 MB after loading the app and about 205 MB after the three tabs have been opened (`/debugz` reports the live figure).
+The app holds all 311,507 paid claims as one compact table (4.0 MB on disk) and filters it live; the headline numbers are precomputed in `summary.json`. On Render the process uses about 195 MB after loading the app and about 230 MB after the three tabs have been opened (`/debugz` reports the live figure).
 
 `wsgi.py` answers `/healthz` immediately and imports the dashboard in a background thread started on the first request in each worker process (a thread started when the module is imported exists only in gunicorn's master process, so the worker would never finish loading). `/debugz` reports whether the app has loaded, its memory use and any startup error.
