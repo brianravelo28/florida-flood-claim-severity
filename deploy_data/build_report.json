@@ -37,6 +37,91 @@
     "zero": 134378,
     "negative": 37
   },
+  "non_payment_reasons": {
+    "zero_total": {
+      "rows": 134378,
+      "with_reason": 131759,
+      "pct_with_reason": 98.1
+    },
+    "negative_total": {
+      "rows": 37,
+      "with_reason": 12
+    },
+    "zero_total_by_decade": {
+      "1970": {
+        "Below the deductible": 1325,
+        "No damage or not a flood": 399,
+        "Administrative error": 81,
+        "Other reason": 1205,
+        "No reason recorded": 0
+      },
+      "1980": {
+        "Below the deductible": 2876,
+        "No damage or not a flood": 2618,
+        "Administrative error": 679,
+        "Other reason": 3842,
+        "No reason recorded": 23
+      },
+      "1990": {
+        "Below the deductible": 5102,
+        "No damage or not a flood": 14832,
+        "Administrative error": 2785,
+        "Other reason": 12607,
+        "No reason recorded": 109
+      },
+      "2000": {
+        "Below the deductible": 2796,
+        "No damage or not a flood": 16006,
+        "Administrative error": 5651,
+        "Other reason": 11328,
+        "No reason recorded": 56
+      },
+      "2010": {
+        "Below the deductible": 3888,
+        "No damage or not a flood": 11053,
+        "Administrative error": 4161,
+        "Other reason": 3700,
+        "No reason recorded": 341
+      },
+      "2020": {
+        "Below the deductible": 4943,
+        "No damage or not a flood": 8630,
+        "Administrative error": 7220,
+        "Other reason": 4032,
+        "No reason recorded": 2090
+      }
+    },
+    "since_2020": {
+      "2020": {
+        "claims": 9991,
+        "zero_total_without_reason": 90
+      },
+      "2021": {
+        "claims": 933,
+        "zero_total_without_reason": 11
+      },
+      "2022": {
+        "claims": 50310,
+        "zero_total_without_reason": 752
+      },
+      "2023": {
+        "claims": 10275,
+        "zero_total_without_reason": 110
+      },
+      "2024": {
+        "claims": 79125,
+        "zero_total_without_reason": 1051
+      },
+      "2025": {
+        "claims": 705,
+        "zero_total_without_reason": 36
+      },
+      "2026": {
+        "claims": 199,
+        "zero_total_without_reason": 40
+      }
+    }
+  },
   "rows_dropped": {
     "missing lat/lon/date": 2591,
     "amountPaid <= 0 (closed without payment)": 134415,

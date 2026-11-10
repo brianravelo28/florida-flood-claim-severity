@@ -35,6 +35,7 @@ FEMA_FIELDS = [
     "amountPaidOnBuildingClaim", "amountPaidOnContentsClaim",
     "amountPaidOnIncreasedCostOfComplianceClaim",
     "causeOfDamage", "waterDepth", "elevationDifference", "buildingDeductibleCode", "foundationType",
+    "nonPaymentReasonBuilding", "nonPaymentReasonContents",
 ]
 PAGE_SIZE = 10000
 

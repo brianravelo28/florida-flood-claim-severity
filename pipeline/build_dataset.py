@@ -7,7 +7,7 @@ import pandas as pd
 
 from constants import (CAUSE_LABELS, COVERAGE_BINS, COVERAGE_LABELS, DEDUCTIBLE_LABELS, DEPTH_BINS, DEPTH_LABELS, ELEVATION_LABELS,
                        BIG_THREE_STORMS, EVENT_MERGES, EVENT_NEEDS_YEAR, FIRM_LABELS, FLOOR_LABELS, FOUNDATION_LABELS, NAMED_STORM_PATTERN,
-                       PRIMARY_LABELS)
+                       NO_REASON, NON_PAYMENT_FIELDS, NON_PAYMENT_GROUP_ORDER, NON_PAYMENT_REASON_GROUPS, OTHER_REASON, PRIMARY_LABELS)
 from pipeline.fetch_data import fetch_cpi, fetch_fema, fetch_price_indexes
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -72,6 +72,31 @@ def without_payment_by_decade(c):
             for d in claims.index}
 
 
+def non_payment_reasons(c):
+    """How FEMA codes the claims that paid nothing: its non-payment-reason field for the building, else for the contents.
+
+    Counts, for claims with a zero total and for claims with a negative total, how many carry a coded reason; the zero-total
+    claims by decade of loss and reason group; and, for each loss year since 2020, the claims with a zero total and no reason.
+    """
+    code = _code(c["nonPaymentReasonBuilding"]).fillna(_code(c["nonPaymentReasonContents"])).str.zfill(2)
+    lookup = {k: g for g, codes in NON_PAYMENT_REASON_GROUPS.items() for k in codes}
+    group = code.map(lookup).fillna(OTHER_REASON).where(code.notna(), NO_REASON)
+    zero, negative = c["amountPaid"] == 0, c["amountPaid"] < 0
+    decade = (c["dateOfLoss"].dt.year // 10) * 10
+    year = c["dateOfLoss"].dt.year
+    out = {
+        "zero_total": {"rows": int(zero.sum()), "with_reason": int((zero & code.notna()).sum())},
+        "negative_total": {"rows": int(negative.sum()), "with_reason": int((negative & code.notna()).sum())},
+        "zero_total_by_decade": {int(d): {g: int(((decade == d) & zero & (group == g)).sum()) for g in NON_PAYMENT_GROUP_ORDER}
+                                 for d in sorted(decade.unique())},
+        "since_2020": {int(y): {"claims": int((year == y).sum()), "zero_total_without_reason": int(((year == y) & zero & code.isna()).sum())}
+                       for y in sorted(year[year >= 2020].unique())},
+    }
+    rows = out["zero_total"]["rows"]
+    out["zero_total"]["pct_with_reason"] = round(100 * out["zero_total"]["with_reason"] / rows, 1) if rows else None
+    return out
+
+
 def prepare_claims(raw):
     c = raw.copy()
     log(f"Raw FEMA claims: {len(c):,}")
@@ -90,6 +115,7 @@ def prepare_claims(raw):
     n = len(c)
     report["closed_without_payment_by_decade"] = without_payment_by_decade(c)
     report["total_paid_zero_or_negative"] = {"zero": int((c["amountPaid"] == 0).sum()), "negative": int((c["amountPaid"] < 0).sum())}
+    report["non_payment_reasons"] = non_payment_reasons(c)
     c = c[c["amountPaid"] > 0]
     steps["amountPaid <= 0 (closed without payment)"] = n - len(c)
 
@@ -110,7 +136,7 @@ def prepare_claims(raw):
     # Rows identical to an earlier row on every field except id. They are kept: they cluster in multi-unit buildings and
     # condo associations, where several units of one building file claims with the same values, and the data have no
     # building or policy identifier to tell a repeat from a neighbour.
-    fields = [col for col in raw.columns if col != "id"]
+    fields = [col for col in raw.columns if col != "id" and col not in NON_PAYMENT_FIELDS]  # the 996 figure predates the reason fields
     report["rows_identical_to_an_earlier_row_except_id"] = int(c.duplicated(subset=fields).sum())
     return c.reset_index(drop=True)
 

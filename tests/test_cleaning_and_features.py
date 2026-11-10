@@ -16,7 +16,7 @@ def fresh_report():
 def raw_claims():
     base = dict(amountPaidOnBuildingClaim=np.nan, amountPaidOnContentsClaim=np.nan,
                 amountPaidOnIncreasedCostOfComplianceClaim=np.nan, dateOfLoss="2000-09-10T00:00:00.000Z",
-                latitude=27.0, longitude=-81.0)
+                latitude=27.0, longitude=-81.0, nonPaymentReasonBuilding=np.nan, nonPaymentReasonContents=np.nan)
     rows = [
         dict(base, amountPaidOnBuildingClaim=1000.0, amountPaidOnContentsClaim=200.0),    # kept: 1,200
         dict(base),                                                                       # nothing paid
@@ -45,7 +45,8 @@ def test_every_exclusion_is_counted_with_its_reason():
 
 def test_rows_identical_except_for_id_are_counted_and_kept():
     row = dict(amountPaidOnBuildingClaim=5000.0, amountPaidOnContentsClaim=0.0, amountPaidOnIncreasedCostOfComplianceClaim=0.0,
-               dateOfLoss="2005-10-24T00:00:00.000Z", latitude=25.1, longitude=-80.4, occupancyType=15.0)
+               dateOfLoss="2005-10-24T00:00:00.000Z", latitude=25.1, longitude=-80.4, occupancyType=15.0,
+               nonPaymentReasonBuilding=np.nan, nonPaymentReasonContents=np.nan)
     raw = pd.DataFrame([dict(row, id=1), dict(row, id=2), dict(row, id=3), dict(row, id=4, amountPaidOnBuildingClaim=5001.0)])
     c = bd.prepare_claims(raw)
     assert len(c) == 4, "repeated rows must not be removed"

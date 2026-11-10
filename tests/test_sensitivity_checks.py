@@ -32,7 +32,7 @@ def claims():
 # ------------------------------------------------------------ claims that paid nothing, by decade
 def raw_with(dates, paid):
     base = dict(amountPaidOnBuildingClaim=np.nan, amountPaidOnContentsClaim=np.nan, amountPaidOnIncreasedCostOfComplianceClaim=np.nan,
-                latitude=27.0, longitude=-81.0)
+                latitude=27.0, longitude=-81.0, nonPaymentReasonBuilding=np.nan, nonPaymentReasonContents=np.nan)
     return pd.DataFrame([dict(base, dateOfLoss=f"{d}T00:00:00.000Z", amountPaidOnBuildingClaim=p) for d, p in zip(dates, paid)])
 
 

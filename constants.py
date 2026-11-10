@@ -26,6 +26,12 @@ MIN_CLAIMS = 30
 # The three storms whose claims carry the 2020s; summary.json shows the 2020s median without them.
 BIG_THREE_STORMS = ("Hurricane Ian", "Hurricane Helene", "Hurricane Milton")
 
+# FEMA's two fields that code why a claim was closed without payment (building, else contents), in the groups the report uses.
+NON_PAYMENT_FIELDS = ("nonPaymentReasonBuilding", "nonPaymentReasonContents")
+NON_PAYMENT_REASON_GROUPS = {"Below the deductible": ("01",), "No damage or not a flood": ("06", "20"), "Administrative error": ("98", "99")}
+OTHER_REASON, NO_REASON = "Other reason", "No reason recorded"
+NON_PAYMENT_GROUP_ORDER = [*NON_PAYMENT_REASON_GROUPS, OTHER_REASON, NO_REASON]
+
 # Intervals for a median resample whole storms (claims from one storm are not independent of each other).
 BOOTSTRAP_REPS = 1000
 BOOTSTRAP_SEED = 20261110
